@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate Extension Icons</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f0f0f0;
+        }
+        .icon-container {
+            display: inline-block;
+            margin: 10px;
+            text-align: center;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #4285f4;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .icon-16 { width: 16px; height: 16px; font-size: 12px; }
+        .icon-32 { width: 32px; height: 32px; font-size: 20px; }
+        .icon-48 { width: 48px; height: 48px; font-size: 28px; }
+        .icon-128 { width: 128px; height: 128px; font-size: 72px; }
+        
+        .download-btn {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .download-btn:hover {
+            background: #3367d6;
+        }
+        
+        .instructions {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="instructions">
+        <h2>Job Search Manager Extension Icons</h2>
+        <p>This page generates briefcase emoji icons for your Chrome extension. To use these icons:</p>
+        <ol>
+            <li>Right-click on each icon below</li>
+            <li>Select "Save image as..."</li>
+            <li>Save with the correct filename (icon16.png, icon32.png, etc.)</li>
+            <li>Place the files in your extension's <code>src/icons/</code> directory</li>
+        </ol>
+        <p><strong>Note:</strong> The icons use a blue background (#4285f4) with a white briefcase emoji for good visibility in the Chrome toolbar.</p>
+    </div>
+
+    <div class="icon-container">
+        <div class="icon icon-16" id="icon16">💼</div>
+        <div>16x16</div>
+        <button class="download-btn" onclick="downloadIcon('icon16', 16)">Download</button>
+    </div>
+
+    <div class="icon-container">
+        <div class="icon icon-32" id="icon32">💼</div>
+        <div>32x32</div>
+        <button class="download-btn" onclick="downloadIcon('icon32', 32)">Download</button>
+    </div>
+
+    <div class="icon-container">
+        <div class="icon icon-48" id="icon48">💼</div>
+        <div>48x48</div>
+        <button class="download-btn" onclick="downloadIcon('icon48', 48)">Download</button>
+    </div>
+
+    <div class="icon-container">
+        <div class="icon icon-128" id="icon128">💼</div>
+        <div>128x128</div>
+        <button class="download-btn" onclick="downloadIcon('icon128', 128)">Download</button>
+    </div>
+
+    <script>
+        function downloadIcon(elementId, size) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // Draw blue background
+            ctx.fillStyle = '#4285f4';
+            ctx.fillRect(0, 0, size, size);
+            
+            // Draw briefcase emoji
+            ctx.font = `${size * 0.6}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = 'white';
+            ctx.fillText('💼', size/2, size/2);
+            
+            // Convert to blob and download
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `icon${size}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+        }
+    </script>
+</body>
+</html> 
