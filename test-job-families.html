@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Family Management Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .job-family-demo {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .job-family-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Job Family Management Test</h1>
+    
+    <div class="test-section">
+        <h2>Job Family Management Feature</h2>
+        <p>This feature allows users to define their own job families for better organization of saved jobs.</p>
+        
+        <div class="job-family-demo">
+            <h3>Current Job Families:</h3>
+            <div id="currentJobFamilies">
+                <div class="job-family-item">
+                    <span>Mechanical Engineer</span>
+                    <span>Default</span>
+                </div>
+                <div class="job-family-item">
+                    <span>System(s) Engineer</span>
+                    <span>Default</span>
+                </div>
+                <div class="job-family-item">
+                    <span>Project Manager</span>
+                    <span>Default</span>
+                </div>
+                <div class="job-family-item">
+                    <span>Software Engineer</span>
+                    <span>Default</span>
+                </div>
+                <div class="job-family-item">
+                    <span>Data Scientist</span>
+                    <span>Default</span>
+                </div>
+                <div class="job-family-item">
+                    <span>Product Manager</span>
+                    <span>Default</span>
+                </div>
+                <div class="job-family-item">
+                    <span>Other</span>
+                    <span>Default</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="status info">
+            <strong>How to use:</strong><br>
+            1. Open the extension and click "Show my jobs"<br>
+            2. Click the ⚙️ button next to the Job Family filter<br>
+            3. Add, edit, or delete job families as needed<br>
+            4. Save your changes to apply them to the filter
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Job Family Storage</h2>
+        <div id="storageStatus" class="status info">
+            Testing job family storage...
+        </div>
+        <button class="test-button" onclick="testJobFamilyStorage()">Test Storage</button>
+        <button class="test-button" onclick="clearJobFamilyStorage()">Clear Storage</button>
+        <button class="test-button" onclick="loadJobFamilyStorage()">Load Storage</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Feature Benefits</h2>
+        <ul>
+            <li><strong>Customization:</strong> Define job families that match your career goals</li>
+            <li><strong>Organization:</strong> Better categorize and filter your saved jobs</li>
+            <li><strong>Flexibility:</strong> Add new job families as your interests evolve</li>
+            <li><strong>Persistence:</strong> Job families are saved locally and persist between sessions</li>
+            <li><strong>Integration:</strong> Seamlessly integrated with the existing job filtering system</li>
+        </ul>
+    </div>
+
+    <script>
+        // Test job family storage functionality
+        function testJobFamilyStorage() {
+            const statusDiv = document.getElementById('storageStatus');
+            
+            try {
+                const testFamilies = [
+                    'Frontend Developer',
+                    'Backend Developer',
+                    'DevOps Engineer',
+                    'UX Designer',
+                    'QA Engineer'
+                ];
+                
+                localStorage.setItem('jobFamilies', JSON.stringify(testFamilies));
+                
+                const loaded = JSON.parse(localStorage.getItem('jobFamilies'));
+                if (JSON.stringify(loaded) === JSON.stringify(testFamilies)) {
+                    statusDiv.className = 'status success';
+                    statusDiv.innerHTML = '✅ Job family storage test passed! Test families saved and loaded correctly.';
+                } else {
+                    statusDiv.className = 'status info';
+                    statusDiv.innerHTML = '❌ Job family storage test failed - data mismatch.';
+                }
+            } catch (error) {
+                statusDiv.className = 'status info';
+                statusDiv.innerHTML = '❌ Job family storage test failed: ' + error.message;
+            }
+        }
+
+        function clearJobFamilyStorage() {
+            const statusDiv = document.getElementById('storageStatus');
+            
+            try {
+                localStorage.removeItem('jobFamilies');
+                statusDiv.className = 'status success';
+                statusDiv.innerHTML = '✅ Job family storage cleared successfully.';
+            } catch (error) {
+                statusDiv.className = 'status info';
+                statusDiv.innerHTML = '❌ Failed to clear job family storage: ' + error.message;
+            }
+        }
+
+        function loadJobFamilyStorage() {
+            const statusDiv = document.getElementById('storageStatus');
+            
+            try {
+                const stored = localStorage.getItem('jobFamilies');
+                if (stored) {
+                    const families = JSON.parse(stored);
+                    statusDiv.className = 'status success';
+                    statusDiv.innerHTML = `✅ Loaded ${families.length} job families: ${families.join(', ')}`;
+                } else {
+                    statusDiv.className = 'status info';
+                    statusDiv.innerHTML = 'ℹ️ No job families found in storage.';
+                }
+            } catch (error) {
+                statusDiv.className = 'status info';
+                statusDiv.innerHTML = '❌ Failed to load job family storage: ' + error.message;
+            }
+        }
+
+        // Auto-test on page load
+        window.addEventListener('load', () => {
+            setTimeout(loadJobFamilyStorage, 1000);
+        });
+    </script>
+</body>
+</html>

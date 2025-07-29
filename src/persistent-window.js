@@ -10,22 +10,18 @@ class PersistentWindow {
     }
 
     initializeElements() {
-        // Main buttons
-        this.saveJobButton = document.getElementById('saveJob');
-        this.downloadJobsButton = document.getElementById('downloadJobs');
-        this.showJobsButton = document.getElementById('showJobs');
-        this.clearStorageButton = document.getElementById('clearStorage');
-        this.bringToFrontButton = document.getElementById('bringToFront');
+        // Main save button (consolidated)
+        this.mainSaveButton = document.getElementById('mainSaveButton');
+        this.clearStorageButton = document.getElementById('clearStorageButton');
+        this.bringToFrontButton = document.getElementById('bringToFrontButton');
         
         // Settings elements
-        this.settingsToggle = document.getElementById('settingsToggle');
+        this.settingsButton = document.getElementById('settingsButton');
         this.settingsPanel = document.getElementById('settingsPanel');
-        this.fileLocationInput = document.getElementById('fileLocation');
-        this.selectDirectoryButton = document.getElementById('selectDirectory');
+        this.fileLocationInput = document.getElementById('fileLocationInput');
         
         // Status and loading
         this.statusMessage = document.getElementById('statusMessage');
-        this.loading = document.getElementById('loading');
         this.progressContainer = document.getElementById('progressContainer');
         
         // File storage service
@@ -33,28 +29,16 @@ class PersistentWindow {
     }
 
     bindEvents() {
-        if (this.saveJobButton) {
-            this.saveJobButton.addEventListener('click', () => this.handleSaveJobClick());
-        }
-        
-        if (this.downloadJobsButton) {
-            this.downloadJobsButton.addEventListener('click', () => this.handleDownloadJobsClick());
-        }
-        
-        if (this.showJobsButton) {
-            this.showJobsButton.addEventListener('click', () => this.handleShowJobsClick());
+        if (this.mainSaveButton) {
+            this.mainSaveButton.addEventListener('click', () => this.handleMainSaveClick());
         }
         
         if (this.clearStorageButton) {
             this.clearStorageButton.addEventListener('click', () => this.handleClearStorage());
         }
         
-        if (this.settingsToggle) {
-            this.settingsToggle.addEventListener('click', () => this.toggleSettings());
-        }
-        
-        if (this.selectDirectoryButton) {
-            this.selectDirectoryButton.addEventListener('click', () => this.selectFileLocation());
+        if (this.settingsButton) {
+            this.settingsButton.addEventListener('click', () => this.toggleSettings());
         }
         
         if (this.bringToFrontButton) {
@@ -75,10 +59,10 @@ class PersistentWindow {
     }
 
     toggleSettings() {
-        if (this.settingsPanel && this.settingsToggle) {
+        if (this.settingsPanel && this.settingsButton) {
             const isVisible = this.settingsPanel.style.display === 'block';
             this.settingsPanel.style.display = isVisible ? 'none' : 'block';
-            this.settingsToggle.textContent = isVisible ? '⚙️ Settings' : '✕ Close';
+            this.settingsButton.textContent = isVisible ? '⚙️ Settings' : '✕ Close';
         }
     }
 
@@ -111,27 +95,20 @@ class PersistentWindow {
                 console.error('Error handling LinkedIn collections URL:', error);
             }
         }
-        
         return false;
     }
 
-    async handleSaveJobClick() {
+    async handleMainSaveClick() {
         try {
-            this.showLoading(true);
-            this.clearProgressSteps();
-            this.addProgressStep('Getting current tab...');
-            
-            // Get current tab from the main browser window, not the persistent window
-            // First, get all windows and find the main browser window
+            // Get the main window and current tab
             const windows = await chrome.windows.getAll({ windowTypes: ['normal'] });
             const mainWindow = windows.find(w => w.type === 'normal');
             
             if (!mainWindow) {
-                this.showStatus('❌ Could not find main browser window. Please refresh the page and try again.', 'error');
+                this.showStatus('❌ Could not find main browser window', 'error');
                 return;
             }
-            
-            // Get the active tab from the main window
+
             let [tab] = await chrome.tabs.query({ active: true, windowId: mainWindow.id });
             
             if (!tab) {
@@ -139,9 +116,7 @@ class PersistentWindow {
                 return;
             }
 
-            console.log('Main window ID:', mainWindow.id);
             console.log('Current tab URL:', tab.url);
-            console.log('Current tab window ID:', tab.windowId);
             console.log('Is job site check:', this.isJobSite(tab.url));
 
             // Check if current page is a supported job site
@@ -174,101 +149,180 @@ class PersistentWindow {
                 }
                 return;
             }
+
+            // Show loading state
+            this.showLoading(true);
+            this.clearProgressSteps();
             
-            this.updateProgressStep(2, 'Injecting content script...');
+            // Initialize progress tracking for comprehensive save operation
+            const totalSteps = 6;
+            let currentStep = 0;
+
+            // Step 1: Validating current page
+            currentStep++;
+            this.addProgressStep('Validating current page');
+            this.updateProgressStep(currentStep, 'Validating current page');
+            this.updateProgress();
             
-            // Inject content script and extract job data
-            const results = await chrome.scripting.executeScript({
-                target: { tabId: tab.id },
-                files: ['extractors.js', 'ai-integration.js', 'content.js']
-            });
-            
-            this.updateProgressStep(3, 'Extracting job data...');
-            
-            // Send message to content script to extract data
-            const response = await chrome.tabs.sendMessage(tab.id, { action: 'extractJobData' });
-            
+            // Step 2: Extracting job data
+            currentStep++;
+            this.addProgressStep('Extracting job data');
+            this.updateProgressStep(currentStep, 'Extracting job data');
+            this.updateProgress();
+
+            // Inject content scripts before sending message
+            try {
+                await chrome.scripting.executeScript({
+                    target: { tabId: tab.id },
+                    files: ['extractors.js', 'content.js']
+                });
+            } catch (scriptError) {
+                console.error('Error injecting scripts:', scriptError);
+                this.updateProgressStep(currentStep, 'Error: Failed to inject scripts');
+                this.showStatus('❌ Failed to inject content scripts. Please refresh the page and try again.', 'error');
+                this.showLoading(false);
+                return;
+            }
+
+            // Send message to content script
+            let response;
+            try {
+                response = await chrome.tabs.sendMessage(tab.id, { action: 'extractJobData' });
+            } catch (messageError) {
+                console.error('Error sending message:', messageError);
+                this.updateProgressStep(currentStep, 'Error: Communication failed');
+                
+                if (messageError.message.includes('Receiving end does not exist')) {
+                    this.showStatus('❌ Could not establish connection. Please refresh the page and try again.', 'error');
+                } else {
+                    this.showStatus('❌ Communication error: ' + messageError.message, 'error');
+                }
+                this.showLoading(false);
+                return;
+            }
+
             if (!response || !response.success) {
+                this.updateProgressStep(currentStep, 'Error: Extraction failed');
                 const errorMsg = response?.error || 'Failed to extract job data';
                 
                 // Provide more specific error messages
                 if (errorMsg.includes('recruiter') || errorMsg.includes('hiring team')) {
-                    throw new Error('Could not find recruiter information. This might be because you need to sign in to LinkedIn or the job posting format has changed.');
-                } else if (errorMsg.includes('job description') || errorMsg.includes('company name')) {
-                    throw new Error('Could not extract job details. Please make sure you are on a complete job posting page and try again.');
+                    this.showStatus('❌ Could not find recruiter information. This might be because you need to sign in to LinkedIn or the job posting format has changed.', 'error');
+                } else if (errorMsg.includes('company') || errorMsg.includes('job title')) {
+                    this.showStatus('❌ Could not extract job details. Please make sure you are on a complete job posting page and try again.', 'error');
                 } else {
-                    throw new Error(errorMsg);
+                    this.showStatus('❌ ' + errorMsg, 'error');
                 }
-            }
-            
-            this.updateProgressStep(4, 'Saving job data...');
-            
-            // Save the job data
-            const jobData = response.data;
-            const saveResult = await this.fileStorage.saveJobData(jobData);
-            
-            if (saveResult.isDuplicate) {
-                this.showDuplicateWarning(jobData, saveResult.existingEntry);
+                this.showLoading(false);
                 return;
             }
+
+            this.updateProgressStep(currentStep, 'Completed: Job data extracted');
+
+            // Step 3: Saving to storage
+            currentStep++;
+            this.addProgressStep('Saving to storage');
+            this.updateProgressStep(currentStep, 'Saving to storage');
+            this.updateProgress();
+
+            const jobData = response.data;
             
+            // Save the file location to storage before saving job data
+            await this.fileStorage.saveFileLocation(this.fileLocationInput.value.trim());
+            
+            const saveResult = await this.fileStorage.saveJobData(jobData);
+
             if (!saveResult.success) {
-                throw new Error(saveResult.errors.join(', '));
-            }
-            
-            this.updateProgressStep(5, 'Job saved successfully!');
-            this.showStatus('✅ Job data saved to storage successfully!', 'success');
-            
-            // Automatically refresh the jobs table page if it's open
-            this.refreshJobsTableIfOpen();
-            
-        } catch (error) {
-            console.error('Error saving job:', error);
-            this.showStatus('❌ Failed to save job: ' + error.message, 'error');
-        } finally {
-            this.showLoading(false);
-        }
-    }
-
-    async handleDownloadJobsClick() {
-        try {
-            this.showLoading(true);
-            this.clearProgressSteps();
-            this.addProgressStep('Preparing export...');
-            
-            const result = await this.fileStorage.exportToPreferredLocation();
-            
-            if (result.success) {
-                this.showStatus('✅ Jobs exported successfully!', 'success');
+                if (saveResult.isDuplicate) {
+                    // Show duplicate warning and ask user if they want to overwrite
+                    const shouldOverwrite = await this.showDuplicateWarning(jobData, saveResult.existingEntry);
+                    
+                    if (shouldOverwrite) {
+                        const overwriteResult = await this.fileStorage.overwriteJobData(jobData);
+                        
+                        if (!overwriteResult.success) {
+                            this.updateProgressStep(currentStep, 'Error: Failed to overwrite');
+                            this.showStatus('❌ Failed to overwrite job data: ' + overwriteResult.errors.join(', '), 'error');
+                            this.showLoading(false);
+                            return;
+                        }
+                        
+                        this.updateProgressStep(currentStep, 'Completed: Job data updated');
+                        this.showStatus('✅ Job data updated successfully!', 'success');
+                        
+                        // Automatically refresh the jobs table page if it's open
+                        this.refreshJobsTableIfOpen();
+                    } else {
+                        // User cancelled
+                        this.updateProgressStep(currentStep, 'Cancelled by user');
+                        this.showStatus('❌ Operation cancelled by user.', 'error');
+                        this.showLoading(false);
+                        return;
+                    }
+                } else {
+                    // Other error
+                    this.updateProgressStep(currentStep, 'Error: Save failed');
+                    this.showStatus('❌ Failed to save job data: ' + saveResult.errors.join(', '), 'error');
+                    this.showLoading(false);
+                    return;
+                }
             } else {
-                throw new Error(result.errors.join(', '));
+                this.updateProgressStep(currentStep, 'Completed: Job data saved');
+                this.showStatus('✅ Job data saved successfully!', 'success');
             }
-            
-        } catch (error) {
-            console.error('Error downloading jobs:', error);
-            this.showStatus('❌ Failed to download jobs: ' + error.message, 'error');
-        } finally {
-            this.showLoading(false);
-        }
-    }
 
-    async handleShowJobsClick() {
-        try {
-            this.showLoading(true);
-            this.clearProgressSteps();
-            this.addProgressStep('Loading jobs...');
+            // Step 4: Downloading CSV file
+            currentStep++;
+            this.addProgressStep('Downloading CSV file');
+            this.updateProgressStep(currentStep, 'Downloading CSV file');
+            this.updateProgress();
+
+            try {
+                const downloadResult = await this.fileStorage.exportToPreferredLocation();
+                if (downloadResult.success) {
+                    this.updateProgressStep(currentStep, 'Completed: CSV downloaded');
+                } else {
+                    this.updateProgressStep(currentStep, 'Warning: CSV download failed');
+                    console.warn('CSV download failed:', downloadResult.errors);
+                }
+            } catch (downloadError) {
+                this.updateProgressStep(currentStep, 'Error: CSV download failed');
+                console.error('Error downloading CSV:', downloadError);
+            }
+
+            // Step 5: Opening jobs table
+            currentStep++;
+            this.addProgressStep('Opening jobs table');
+            this.updateProgressStep(currentStep, 'Opening jobs table');
+            this.updateProgress();
+
+            try {
+                await chrome.tabs.create({
+                    url: chrome.runtime.getURL('jobs-table.html')
+                });
+                this.updateProgressStep(currentStep, 'Completed: Jobs table opened');
+            } catch (tableError) {
+                this.updateProgressStep(currentStep, 'Error: Failed to open jobs table');
+                console.error('Error opening jobs table:', tableError);
+            }
+
+            // Step 6: Finalizing
+            currentStep++;
+            this.addProgressStep('Finalizing');
+            this.updateProgressStep(currentStep, 'Completed: All operations finished');
+            this.updateProgress();
+
+            // Show final success message
+            this.showStatus('✅ Everything saved successfully! Job data saved, CSV downloaded, and jobs table opened.', 'success');
             
-            // Open jobs table in a new tab
-            await chrome.tabs.create({
-                url: chrome.runtime.getURL('jobs-table.html')
-            });
-            
-            this.showStatus('✅ Jobs table opened in new tab', 'success');
-            
+            // Hide loading after a short delay
+            setTimeout(() => {
+                this.showLoading(false);
+            }, 2000);
+
         } catch (error) {
-            console.error('Error showing jobs:', error);
-            this.showStatus('❌ Failed to open jobs table: ' + error.message, 'error');
-        } finally {
+            console.error('Error in main save operation:', error);
+            this.showStatus('❌ An unexpected error occurred: ' + error.message, 'error');
             this.showLoading(false);
         }
     }
@@ -388,10 +442,22 @@ class PersistentWindow {
             console.log('LinkedIn URL but no matching patterns found');
         }
         
-        // Check for Indeed job postings
-        if (url.includes('indeed.com/viewjob') || url.includes('indeed.com/job/')) {
-            console.log('Indeed job URL found - returning true');
-            return true;
+        // Check for Indeed job postings - expanded patterns
+        if (url.includes('indeed.com')) {
+            console.log('Indeed URL found');
+            
+            // Check for various Indeed job posting patterns
+            if (url.includes('indeed.com/viewjob') || 
+                url.includes('indeed.com/job/') ||
+                url.includes('indeed.com/?vjk=') ||  // vjk parameter indicates job ID
+                url.includes('indeed.com/viewjob?') ||
+                url.includes('indeed.com/jobs/') ||
+                (url.includes('indeed.com') && (url.includes('vjk=') || url.includes('jk=')))) {
+                console.log('Indeed job URL pattern found - returning true');
+                return true;
+            }
+            
+            console.log('Indeed URL but no job posting patterns found');
         }
         
         // Check for other job sites
@@ -420,9 +486,9 @@ class PersistentWindow {
         }
         
         // Disable/enable buttons during loading
-        if (this.saveJobButton) this.saveJobButton.disabled = show;
-        if (this.downloadJobsButton) this.downloadJobsButton.disabled = show;
-        if (this.showJobsButton) this.showJobsButton.disabled = show;
+        if (this.mainSaveButton) this.mainSaveButton.disabled = show;
+        if (this.clearStorageButton) this.clearStorageButton.disabled = show;
+        if (this.bringToFrontButton) this.bringToFrontButton.disabled = show;
     }
 
     clearProgressSteps() {

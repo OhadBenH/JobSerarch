@@ -69,83 +69,13 @@
             padding: 20px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             margin-bottom: 20px;
-        }
-        
-        .button-group {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            min-height: 400px;
         }
         
-        .action-button {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        .save-job-button {
-            background: #007bff;
-            color: white;
-        }
-        
-        .save-job-button:hover {
-            background: #0056b3;
-        }
-        
-        .save-job-button:disabled {
-            background: #6c757d;
-            cursor: not-allowed;
-        }
-        
-        .download-jobs-button {
-            background: #28a745;
-            color: white;
-        }
-        
-        .download-jobs-button:hover {
-            background: #218838;
-        }
-        
-        .download-jobs-button:disabled {
-            background: #6c757d;
-            cursor: not-allowed;
-        }
-        
-        .show-jobs-button {
-            background: #17a2b8;
-            color: white;
-        }
-        
-        .show-jobs-button:hover {
-            background: #138496;
-        }
-        
-        .show-jobs-button:disabled {
-            background: #6c757d;
-            cursor: not-allowed;
-        }
-        
-        .clear-storage-button {
-            background: #dc3545;
-            color: white;
-        }
-        
-        .clear-storage-button:hover {
-            background: #c82333;
-        }
-        
-        .clear-storage-button:disabled {
-            background: #6c757d;
-            cursor: not-allowed;
+        .content-area {
+            flex: 1;
         }
         
         .settings-button {
@@ -353,6 +283,68 @@
         .btn-secondary:hover {
             background: #545b62;
         }
+        
+        .main-save-button {
+            width: 100%;
+            padding: 18px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .main-save-button:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        
+        .main-save-button:active {
+            transform: translateY(0);
+        }
+        
+        .main-save-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .save-description {
+            text-align: center;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #6c757d;
+            line-height: 1.4;
+        }
+        
+        .clear-storage-button {
+            width: 100%;
+            padding: 8px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 16px;
+            transition: background-color 0.2s;
+        }
+        
+        .clear-storage-button:hover {
+            background: #c82333;
+        }
+        
+        .clear-storage-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -368,52 +360,48 @@
     </div>
     
     <div class="main-content">
-        <div class="button-group">
-            <button id="saveJobButton" class="action-button save-job-button">
-                💾 Save to my jobs
+        <div class="content-area">
+            <button id="settingsButton" class="settings-button">
+                ⚙️ Settings
             </button>
             
-            <button id="downloadJobsButton" class="action-button download-jobs-button">
-                📥 Download all my jobs as CSV
-            </button>
+            <div id="statusMessage" class="status-message"></div>
             
-            <button id="showJobsButton" class="action-button show-jobs-button">
-                📋 Show my jobs
-            </button>
+            <div id="progressContainer" class="progress-container">
+                <div class="progress-bar">
+                    <div id="progressFill" class="progress-fill"></div>
+                </div>
+                <div id="progressSteps" class="progress-steps">
+                    <span id="currentStep" class="current-step">Ready</span>
+                </div>
+            </div>
             
-            <button id="clearStorageButton" class="action-button clear-storage-button">
+            <div id="settingsPanel" class="settings-panel">
+                <h3>Settings</h3>
+                
+                <div class="form-group">
+                    <label for="fileLocationInput">File Save Location:</label>
+                    <input type="text" id="fileLocationInput" placeholder="e.g., C:\JobSearch\">
+                    <div class="help-text">Leave empty to use default Downloads folder</div>
+                </div>
+            </div>
+            
+            <button id="clearStorageButton" class="clear-storage-button">
                 🗑️ Clear All Data & Settings
             </button>
         </div>
         
-        <button id="settingsButton" class="settings-button">
-            ⚙️ Settings
+        <button id="mainSaveButton" class="main-save-button">
+            💾 Save Everything
         </button>
         
-        <div id="statusMessage" class="status-message"></div>
-        
-        <div id="progressContainer" class="progress-container">
-            <div class="progress-bar">
-                <div id="progressFill" class="progress-fill"></div>
-            </div>
-            <div id="progressSteps" class="progress-steps">
-                <span id="currentStep" class="current-step">Ready</span>
-            </div>
-        </div>
-        
-        <div id="settingsPanel" class="settings-panel">
-            <h3>Settings</h3>
-            
-            <div class="form-group">
-                <label for="fileLocationInput">File Save Location:</label>
-                <input type="text" id="fileLocationInput" placeholder="e.g., C:\JobSearch\">
-                <div class="help-text">Leave empty to use default Downloads folder</div>
-            </div>
+        <div class="save-description">
+            Saves current job to storage, downloads CSV file, and updates all data
         </div>
     </div>
     
     <div class="footer">
-        <p>Navigate to any job posting page and click "Save to my jobs"</p>
+        <p>Navigate to any job posting page and click "Save Everything"</p>
         <p>This window will stay open while you browse different sites</p>
     </div>
     

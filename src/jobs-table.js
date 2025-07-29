@@ -29,6 +29,20 @@ class JobsTable {
         this.refreshBtn = document.getElementById('refreshBtn');
         this.exportBtn = document.getElementById('exportBtn');
         this.clearBtn = document.getElementById('clearBtn');
+        
+        // Job Family Management Elements
+        this.manageJobFamiliesBtn = document.getElementById('manageJobFamiliesBtn');
+        this.jobFamilyModal = document.getElementById('jobFamilyModal');
+        this.closeJobFamilyModal = document.getElementById('closeJobFamilyModal');
+        this.newJobFamilyInput = document.getElementById('newJobFamilyInput');
+        this.addJobFamilyBtn = document.getElementById('addJobFamilyBtn');
+        this.jobFamilyList = document.getElementById('jobFamilyList');
+        this.saveJobFamiliesBtn = document.getElementById('saveJobFamiliesBtn');
+        this.cancelJobFamiliesBtn = document.getElementById('cancelJobFamiliesBtn');
+        
+        // Initialize job families
+        this.jobFamilies = this.loadJobFamilies();
+        this.tempJobFamilies = [...this.jobFamilies]; // For editing
     }
 
     bindEvents() {
@@ -38,6 +52,21 @@ class JobsTable {
         this.refreshBtn.addEventListener('click', () => this.loadJobs());
         this.exportBtn.addEventListener('click', () => this.exportToCSV());
         this.clearBtn.addEventListener('click', () => this.clearAllJobs());
+        
+        // Job Family Management Events
+        this.manageJobFamiliesBtn.addEventListener('click', () => this.openJobFamilyModal());
+        this.closeJobFamilyModal.addEventListener('click', () => this.closeJobFamilyModal());
+        this.addJobFamilyBtn.addEventListener('click', () => this.addJobFamily());
+        this.saveJobFamiliesBtn.addEventListener('click', () => this.saveJobFamilies());
+        this.cancelJobFamiliesBtn.addEventListener('click', () => this.cancelJobFamilyChanges());
+        this.newJobFamilyInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.addJobFamily();
+        });
+        
+        // Close modal when clicking outside
+        this.jobFamilyModal.addEventListener('click', (e) => {
+            if (e.target === this.jobFamilyModal) this.closeJobFamilyModal();
+        });
     }
 
     async loadJobs() {
@@ -60,6 +89,9 @@ class JobsTable {
             this.updateStats();
             this.renderTable();
             this.showTable();
+            
+            // Initialize job family filter
+            this.updateJobFamilyFilter();
 
         } catch (error) {
             console.error('Error loading jobs:', error);
@@ -150,6 +182,18 @@ class JobsTable {
             const websiteSpan = document.createElement('span');
             websiteSpan.className = 'website-type';
             websiteSpan.textContent = job.websiteType || 'N/A';
+            
+            // Add color coding for different job sites
+            if (job.websiteType === 'LinkedIn') {
+                websiteSpan.classList.add('linkedin-job');
+            } else if (job.websiteType === 'Indeed') {
+                websiteSpan.classList.add('indeed-job');
+            } else if (job.websiteType === 'Company') {
+                websiteSpan.classList.add('company-job');
+            } else if (job.websiteType === 'Other') {
+                websiteSpan.classList.add('other-job');
+            }
+            
             websiteCell.appendChild(websiteSpan);
 
             // Job Description
@@ -175,16 +219,32 @@ class JobsTable {
             const commentsCell = document.createElement('td');
             commentsCell.className = 'comments-cell';
             commentsCell.innerHTML = `
-                <textarea class="comment-input" placeholder="Add notes..." data-url="${job.url}">${job.comments || ''}</textarea>
+                <div class="comment-container">
+                    <textarea class="comment-input" placeholder="Add notes..." data-url="${job.url}">${job.comments || ''}</textarea>
+                    <button class="save-comment-btn" data-url="${job.url}" title="Save comment">💾</button>
+                </div>
             `;
             
             // Auto-save functionality
             let saveTimeout;
-            commentsCell.querySelector('.comment-input').addEventListener('input', () => {
+            const commentInput = commentsCell.querySelector('.comment-input');
+            const saveButton = commentsCell.querySelector('.save-comment-btn');
+            
+            commentInput.addEventListener('input', () => {
                 clearTimeout(saveTimeout);
                 saveTimeout = setTimeout(() => {
-                    this.saveComment(job.url, commentsCell.querySelector('.comment-input').value);
+                    this.saveComment(job.url, commentInput.value);
                 }, 1000); // Save after 1 second of inactivity
+            });
+            
+            // Manual save button
+            saveButton.addEventListener('click', () => {
+                this.saveComment(job.url, commentInput.value);
+                // Show visual feedback
+                saveButton.textContent = '✅';
+                setTimeout(() => {
+                    saveButton.textContent = '💾';
+                }, 1000);
             });
             
             // Recruiter
@@ -366,30 +426,153 @@ class JobsTable {
 
     async saveComment(jobUrl, comment) {
         try {
-            // Find the job in the current data
-            const jobIndex = this.jobs.findIndex(job => job.url === jobUrl);
+            const fileStorage = new FileStorageService();
+            await fileStorage.loadSettings();
+            
+            // Find and update the job with the comment
+            const jobIndex = fileStorage.storedData.findIndex(job => job.url === jobUrl);
             if (jobIndex !== -1) {
-                // Update the job data
-                this.jobs[jobIndex].comments = comment;
+                fileStorage.storedData[jobIndex].comments = comment;
+                await fileStorage.saveStoredData();
                 
-                // Save to Chrome storage
-                await chrome.storage.local.set({ jobData: this.jobs });
-                
-                // Update filtered jobs if this job is currently visible
-                const filteredIndex = this.filteredJobs.findIndex(job => job.url === jobUrl);
-                if (filteredIndex !== -1) {
-                    this.filteredJobs[filteredIndex].comments = comment;
+                // Update the local jobs array
+                const localJobIndex = this.jobs.findIndex(job => job.url === jobUrl);
+                if (localJobIndex !== -1) {
+                    this.jobs[localJobIndex].comments = comment;
                 }
-                
-                console.log('Comment saved for job:', jobUrl);
             }
         } catch (error) {
             console.error('Error saving comment:', error);
         }
     }
+
+    // Job Family Management Methods
+    loadJobFamilies() {
+        try {
+            const stored = localStorage.getItem('jobFamilies');
+            if (stored) {
+                return JSON.parse(stored);
+            }
+        } catch (error) {
+            console.error('Error loading job families:', error);
+        }
+        
+        // Default job families
+        return [
+            'Mechanical Engineer',
+            'System(s) Engineer', 
+            'Project Manager',
+            'Software Engineer',
+            'Data Scientist',
+            'Product Manager',
+            'Other'
+        ];
+    }
+
+    saveJobFamilies() {
+        this.jobFamilies = [...this.tempJobFamilies];
+        this.saveJobFamiliesToStorage();
+    }
+
+    saveJobFamiliesToStorage() {
+        try {
+            localStorage.setItem('jobFamilies', JSON.stringify(this.jobFamilies));
+            this.updateJobFamilyFilter();
+            this.closeJobFamilyModal();
+        } catch (error) {
+            console.error('Error saving job families:', error);
+        }
+    }
+
+    updateJobFamilyFilter() {
+        // Clear existing options except "All"
+        this.jobFamilyFilter.innerHTML = '<option value="">All</option>';
+        
+        // Add job families
+        this.jobFamilies.forEach(family => {
+            const option = document.createElement('option');
+            option.value = family;
+            option.textContent = family;
+            this.jobFamilyFilter.appendChild(option);
+        });
+    }
+
+    openJobFamilyModal() {
+        this.tempJobFamilies = [...this.jobFamilies];
+        this.renderJobFamilyList();
+        this.jobFamilyModal.style.display = 'block';
+        this.newJobFamilyInput.focus();
+    }
+
+    closeJobFamilyModal() {
+        this.jobFamilyModal.style.display = 'none';
+        this.newJobFamilyInput.value = '';
+    }
+
+    addJobFamily() {
+        const newFamily = this.newJobFamilyInput.value.trim();
+        if (!newFamily) return;
+        
+        if (this.tempJobFamilies.includes(newFamily)) {
+            alert('This job family already exists.');
+            return;
+        }
+        
+        this.tempJobFamilies.push(newFamily);
+        this.newJobFamilyInput.value = '';
+        this.renderJobFamilyList();
+    }
+
+    editJobFamily(index) {
+        const oldName = this.tempJobFamilies[index];
+        const newName = prompt('Edit job family name:', oldName);
+        
+        if (newName && newName.trim() && newName.trim() !== oldName) {
+            const trimmedName = newName.trim();
+            if (this.tempJobFamilies.includes(trimmedName)) {
+                alert('This job family already exists.');
+                return;
+            }
+            this.tempJobFamilies[index] = trimmedName;
+            this.renderJobFamilyList();
+        }
+    }
+
+    deleteJobFamily(index) {
+        const familyName = this.tempJobFamilies[index];
+        const confirmed = confirm(`Are you sure you want to delete "${familyName}"? This will affect jobs currently categorized under this family.`);
+        
+        if (confirmed) {
+            this.tempJobFamilies.splice(index, 1);
+            this.renderJobFamilyList();
+        }
+    }
+
+    renderJobFamilyList() {
+        this.jobFamilyList.innerHTML = '';
+        
+        this.tempJobFamilies.forEach((family, index) => {
+            const item = document.createElement('div');
+            item.className = 'job-family-item';
+            item.innerHTML = `
+                <span class="job-family-name">${family}</span>
+                <div class="job-family-actions">
+                    <button class="btn-edit" onclick="jobsTable.editJobFamily(${index})">Edit</button>
+                    <button class="btn-delete" onclick="jobsTable.deleteJobFamily(${index})">Delete</button>
+                </div>
+            `;
+            this.jobFamilyList.appendChild(item);
+        });
+    }
+
+    cancelJobFamilyChanges() {
+        this.tempJobFamilies = [...this.jobFamilies];
+        this.closeJobFamilyModal();
+    }
 }
 
 // Initialize the jobs table when the page loads
+let jobsTable;
 document.addEventListener('DOMContentLoaded', () => {
-    new JobsTable();
+    jobsTable = new JobsTable();
 }); 

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Button Test - Job Search Manager</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Job Search Manager - Button Test</h1>
+    
+    <div class="test-section">
+        <h2>Extension Status</h2>
+        <div id="extensionStatus" class="status info">
+            Checking extension status...
+        </div>
+        <button class="test-button" onclick="checkExtension()">Check Extension</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Popup Test</h2>
+        <p>Click the extension icon in your browser toolbar to test the popup functionality.</p>
+        <div id="popupStatus" class="status info">
+            Popup test: Click extension icon to test
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Persistent Window Test</h2>
+        <p>Click the extension icon to open the persistent window.</p>
+        <div id="persistentStatus" class="status info">
+            Persistent window test: Click extension icon to test
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Job Site Simulation</h2>
+        <p>This simulates a job posting page for testing extraction.</p>
+        <div id="jobSiteStatus" class="status info">
+            Ready to test job extraction
+        </div>
+        <button class="test-button" onclick="simulateJobSite()">Simulate Job Site</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Storage Test</h2>
+        <div id="storageStatus" class="status info">
+            Storage test ready
+        </div>
+        <button class="test-button" onclick="testStorage()">Test Storage</button>
+        <button class="test-button" onclick="clearStorage()">Clear Storage</button>
+    </div>
+
+    <script>
+        // Check if extension is available
+        function checkExtension() {
+            const statusDiv = document.getElementById('extensionStatus');
+            
+            if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
+                statusDiv.className = 'status success';
+                statusDiv.textContent = '✅ Extension detected and available';
+            } else {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Extension not detected. Make sure the extension is loaded.';
+            }
+        }
+
+        // Simulate a job site
+        function simulateJobSite() {
+            const statusDiv = document.getElementById('jobSiteStatus');
+            statusDiv.className = 'status success';
+            statusDiv.textContent = '✅ Job site simulation active. You can now test the extension on this page.';
+            
+            // Add some job-related content to the page
+            document.body.innerHTML += `
+                <div class="test-section">
+                    <h2>Simulated Job Posting</h2>
+                    <h3>Senior Software Engineer</h3>
+                    <p><strong>Company:</strong> Test Company Inc.</p>
+                    <p><strong>Location:</strong> Remote</p>
+                    <p><strong>Job Description:</strong> We are looking for a talented software engineer to join our team...</p>
+                    <p><strong>Requirements:</strong> 5+ years of experience, JavaScript, React, Node.js</p>
+                </div>
+            `;
+        }
+
+        // Test storage functionality
+        async function testStorage() {
+            const statusDiv = document.getElementById('storageStatus');
+            
+            try {
+                if (typeof chrome !== 'undefined' && chrome.storage) {
+                    // Test writing to storage
+                    await chrome.storage.local.set({ testData: 'test value' });
+                    
+                    // Test reading from storage
+                    const result = await chrome.storage.local.get(['testData']);
+                    
+                    if (result.testData === 'test value') {
+                        statusDiv.className = 'status success';
+                        statusDiv.textContent = '✅ Storage test passed - read/write working';
+                    } else {
+                        statusDiv.className = 'status error';
+                        statusDiv.textContent = '❌ Storage test failed - data mismatch';
+                    }
+                } else {
+                    statusDiv.className = 'status error';
+                    statusDiv.textContent = '❌ Chrome storage API not available';
+                }
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Storage test failed: ' + error.message;
+            }
+        }
+
+        // Clear storage
+        async function clearStorage() {
+            const statusDiv = document.getElementById('storageStatus');
+            
+            try {
+                if (typeof chrome !== 'undefined' && chrome.storage) {
+                    await chrome.storage.local.clear();
+                    statusDiv.className = 'status success';
+                    statusDiv.textContent = '✅ Storage cleared successfully';
+                } else {
+                    statusDiv.className = 'status error';
+                    statusDiv.textContent = '❌ Chrome storage API not available';
+                }
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Failed to clear storage: ' + error.message;
+            }
+        }
+
+        // Auto-check extension on page load
+        window.addEventListener('load', () => {
+            setTimeout(checkExtension, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -181,12 +181,39 @@
         }
         
         .website-type {
+            display: inline-block;
             padding: 4px 8px;
             border-radius: 12px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 500;
-            background: #e9ecef;
-            color: #495057;
+            text-transform: uppercase;
+            background: #f8f9fa;
+            color: #6c757d;
+            border: 1px solid #dee2e6;
+        }
+        
+        .website-type.linkedin-job {
+            background: #0077b5;
+            color: white;
+            border-color: #0077b5;
+        }
+        
+        .website-type.indeed-job {
+            background: #003a9b;
+            color: white;
+            border-color: #003a9b;
+        }
+        
+        .website-type.company-job {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+        
+        .website-type.other-job {
+            background: #6c757d;
+            color: white;
+            border-color: #6c757d;
         }
         
         .job-description {
@@ -308,6 +335,153 @@
             background: #c82333;
         }
         
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: #007bff;
+            border: 1px solid #007bff;
+        }
+        
+        .btn-outline:hover {
+            background: #007bff;
+            color: white;
+        }
+        
+        /* Job Family Management Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .modal-title {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        .job-family-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        
+        .job-family-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .job-family-name {
+            flex: 1;
+            font-weight: 500;
+        }
+        
+        .job-family-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-edit, .btn-delete {
+            padding: 4px 8px;
+            font-size: 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .btn-edit {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .btn-edit:hover {
+            background: #138496;
+        }
+        
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-delete:hover {
+            background: #c82333;
+        }
+        
+        .add-job-family-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .add-job-family-form input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .add-job-family-form input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 15px;
+            border-top: 1px solid #dee2e6;
+        }
+        
         .job-freshness {
             font-size: 12px;
             color: #666;
@@ -335,6 +509,44 @@
         .comments-input::placeholder {
             color: #999;
             font-style: italic;
+        }
+        
+        .comment-input {
+            flex: 1;
+            width: auto;
+            min-height: 60px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        .comment-container {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+        }
+        
+        .save-comment-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+            flex-shrink: 0;
+        }
+        
+        .save-comment-btn:hover {
+            background: #218838;
+        }
+        
+        .save-comment-btn:active {
+            transform: scale(0.95);
         }
         
         /* Responsive design for smaller screens */
@@ -427,6 +639,7 @@
                         <option value="Project Manager">Project Manager</option>
                         <option value="Other">Other</option>
                     </select>
+                    <button id="manageJobFamiliesBtn" class="btn btn-sm btn-outline" title="Manage Job Families">⚙️</button>
                 </div>
                 <div class="filter-group">
                     <label for="websiteFilter">Website:</label>
@@ -485,6 +698,30 @@
             <a href="#" class="btn btn-primary" id="refreshBtn">🔄 Refresh</a>
             <a href="#" class="btn btn-success" id="exportBtn">📥 Export CSV</a>
             <a href="#" class="btn btn-danger" id="clearBtn">🗑️ Clear All</a>
+        </div>
+    </div>
+    
+    <!-- Job Family Management Modal -->
+    <div id="jobFamilyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Manage Job Families</h3>
+                <span class="close" id="closeJobFamilyModal">&times;</span>
+            </div>
+            
+            <div class="add-job-family-form">
+                <input type="text" id="newJobFamilyInput" placeholder="Enter new job family name...">
+                <button id="addJobFamilyBtn" class="btn btn-primary">Add</button>
+            </div>
+            
+            <div class="job-family-list" id="jobFamilyList">
+                <!-- Job families will be populated here -->
+            </div>
+            
+            <div class="modal-footer">
+                <button id="saveJobFamiliesBtn" class="btn btn-success">Save Changes</button>
+                <button id="cancelJobFamiliesBtn" class="btn btn-secondary">Cancel</button>
+            </div>
         </div>
     </div>
     

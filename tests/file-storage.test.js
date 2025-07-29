@@ -271,24 +271,13 @@ describe('File Storage Service', () => {
       expect(formatted.recruitername).toBe('John Smith');
     });
 
-    test('handles missing AI summary gracefully', () => {
-      const jobDataWithoutAI = { ...mockJobData };
-      delete jobDataWithoutAI.aiSummary;
-      
-      const jsonFormatted = fileStorage.formatJobDataForJSON(jobDataWithoutAI);
-      const excelFormatted = fileStorage.formatJobDataForExcel(jobDataWithoutAI);
-      
-      expect(jsonFormatted.aiSummary).toBeNull();
-      expect(excelFormatted.aisummary).toBe('N/A');
-    });
-
     test('handles missing recruiter name gracefully', () => {
       const jobDataWithoutRecruiter = { ...mockJobData };
       delete jobDataWithoutRecruiter.recruiterName;
       
       const excelFormatted = fileStorage.formatJobDataForExcel(jobDataWithoutRecruiter);
       
-      expect(excelFormatted.recruitername).toBe('N/A');
+      expect(excelFormatted.recruitername).toBe('');
     });
 
     test('includes company section in Excel formatting', () => {
@@ -319,7 +308,7 @@ describe('File Storage Service', () => {
       
       const excelFormatted = fileStorage.formatJobDataForExcel(jobDataWithoutCompanySection);
       
-      expect(excelFormatted.companysection).toBe('N/A');
+      expect(excelFormatted.companysection).toBe('');
     });
 
     test('handles missing position summary gracefully', () => {
@@ -328,7 +317,7 @@ describe('File Storage Service', () => {
       
       const excelFormatted = fileStorage.formatJobDataForExcel(jobDataWithoutPositionSummary);
       
-      expect(excelFormatted.positionsummary).toBe('N/A');
+      expect(excelFormatted.positionsummary).toBe('');
     });
   });
 

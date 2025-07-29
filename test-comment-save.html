@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comment Save Button Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .demo-comment {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        .comment-container {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+        }
+        .comment-input {
+            flex: 1;
+            width: auto;
+            min-height: 60px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        .save-comment-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+            flex-shrink: 0;
+        }
+        .save-comment-btn:hover {
+            background: #218838;
+        }
+        .save-comment-btn:active {
+            transform: scale(0.95);
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .feature-list li:before {
+            content: "✅ ";
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>💾 Comment Save Button Test</h1>
+    
+    <div class="test-section">
+        <h2>Comment Save Button Feature</h2>
+        <p>This feature adds a manual save button for comments, giving users more control over when their comments are saved.</p>
+        
+        <div class="demo-comment">
+            <h3>Demo Comment Interface:</h3>
+            <div class="comment-container">
+                <textarea class="comment-input" placeholder="Add notes about this job..." id="demoComment">This is a sample comment to demonstrate the save functionality.</textarea>
+                <button class="save-comment-btn" onclick="saveDemoComment()" title="Save comment">💾</button>
+            </div>
+            <div id="saveStatus" class="status info">
+                Click the save button to test the functionality
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Feature Benefits</h2>
+        <ul class="feature-list">
+            <li><strong>Manual Control:</strong> Users can save comments immediately when they want to</li>
+            <li><strong>Visual Feedback:</strong> Button shows ✅ when comment is saved successfully</li>
+            <li><strong>Auto-save Backup:</strong> Comments still auto-save after 1 second of inactivity</li>
+            <li><strong>Better UX:</strong> Clear indication of when comments are being saved</li>
+            <li><strong>Flexibility:</strong> Users can choose between manual and automatic saving</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>How It Works</h2>
+        <ol>
+            <li><strong>Auto-save:</strong> Comments automatically save after 1 second of inactivity (existing feature)</li>
+            <li><strong>Manual Save:</strong> Click the 💾 button to save immediately</li>
+            <li><strong>Visual Feedback:</strong> Button briefly shows ✅ to confirm save</li>
+            <li><strong>Data Persistence:</strong> Comments are saved to Chrome storage and persist between sessions</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>Technical Implementation</h2>
+        <p><strong>HTML Structure:</strong></p>
+        <pre><code>&lt;div class="comment-container"&gt;
+    &lt;textarea class="comment-input"&gt;&lt;/textarea&gt;
+    &lt;button class="save-comment-btn"&gt;💾&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+        
+        <p><strong>CSS Layout:</strong></p>
+        <pre><code>.comment-container {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+}</code></pre>
+        
+        <p><strong>JavaScript Functionality:</strong></p>
+        <pre><code>// Manual save button
+saveButton.addEventListener('click', () => {
+    this.saveComment(job.url, commentInput.value);
+    // Show visual feedback
+    saveButton.textContent = '✅';
+    setTimeout(() => {
+        saveButton.textContent = '💾';
+    }, 1000);
+});</code></pre>
+    </div>
+
+    <script>
+        function saveDemoComment() {
+            const statusDiv = document.getElementById('saveStatus');
+            const saveButton = document.querySelector('.save-comment-btn');
+            const commentText = document.getElementById('demoComment').value;
+            
+            // Simulate saving
+            statusDiv.className = 'status success';
+            statusDiv.textContent = `✅ Comment saved: "${commentText}"`;
+            
+            // Show visual feedback on button
+            saveButton.textContent = '✅';
+            setTimeout(() => {
+                saveButton.textContent = '💾';
+            }, 1000);
+            
+            // Clear status after 3 seconds
+            setTimeout(() => {
+                statusDiv.className = 'status info';
+                statusDiv.textContent = 'Click the save button to test the functionality';
+            }, 3000);
+        }
+        
+        // Auto-save simulation
+        let autoSaveTimeout;
+        document.getElementById('demoComment').addEventListener('input', () => {
+            const statusDiv = document.getElementById('saveStatus');
+            
+            // Clear existing timeout
+            clearTimeout(autoSaveTimeout);
+            
+            // Show typing indicator
+            statusDiv.className = 'status info';
+            statusDiv.textContent = 'Typing... (will auto-save in 1 second)';
+            
+            // Set new timeout for auto-save
+            autoSaveTimeout = setTimeout(() => {
+                const commentText = document.getElementById('demoComment').value;
+                statusDiv.className = 'status success';
+                statusDiv.textContent = `🔄 Auto-saved: "${commentText}"`;
+                
+                // Clear status after 2 seconds
+                setTimeout(() => {
+                    statusDiv.className = 'status info';
+                    statusDiv.textContent = 'Click the save button to test the functionality';
+                }, 2000);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

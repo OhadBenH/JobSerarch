@@ -8,14 +8,12 @@ class PopupUI {
     }
 
     initializeElements() {
-        // Main buttons
-        this.saveJobButton = document.getElementById('saveJob');
-        this.downloadJobsButton = document.getElementById('downloadJobs');
-        this.showJobsButton = document.getElementById('showJobs');
-        this.clearStorageButton = document.getElementById('clearStorage');
+        // Main save button (consolidated)
+        this.mainSaveButton = document.getElementById('mainSaveButton');
+        this.clearStorageButton = document.getElementById('clearStorageButton');
         
         // Settings elements
-        this.settingsToggle = document.getElementById('settingsToggle');
+        this.settingsButton = document.getElementById('settingsButton');
         this.settingsPanel = document.getElementById('settingsPanel');
         this.fileLocationInput = document.getElementById('fileLocation');
         this.selectDirectoryButton = document.getElementById('selectDirectory');
@@ -23,19 +21,18 @@ class PopupUI {
         // Status and loading
         this.statusMessage = document.getElementById('statusMessage');
         this.loading = document.getElementById('loading');
-        this.progressContainer = document.getElementById('progressContainer');
+        this.progressText = document.getElementById('progressText');
+        this.progressSteps = document.getElementById('progressSteps');
     }
 
     bindEvents() {
-        if (this.saveJobButton) this.saveJobButton.addEventListener('click', () => this.handleSaveJobClick());
-        if (this.downloadJobsButton) this.downloadJobsButton.addEventListener('click', () => this.handleDownloadJobsClick());
-        if (this.showJobsButton) this.showJobsButton.addEventListener('click', () => this.handleShowJobsClick());
-        if (this.settingsToggle) this.settingsToggle.addEventListener('click', () => this.toggleSettings());
+        if (this.mainSaveButton) this.mainSaveButton.addEventListener('click', () => this.handleMainSaveClick());
+        if (this.settingsButton) this.settingsButton.addEventListener('click', () => this.toggleSettings());
         if (this.selectDirectoryButton) this.selectDirectoryButton.addEventListener('click', () => this.handleSelectDirectory());
         if (this.clearStorageButton) this.clearStorageButton.addEventListener('click', () => this.handleClearStorage());
     }
 
-    async handleSaveJobClick() {
+    async handleMainSaveClick() {
         try {
             // Check permissions first
             const hasPermissions = await this.checkPermissions();
@@ -90,8 +87,8 @@ class PopupUI {
             this.showLoading(true);
             this.clearProgressSteps();
             
-            // Initialize progress tracking
-            const totalSteps = 4;
+            // Initialize progress tracking for comprehensive save operation
+            const totalSteps = 6;
             let currentStep = 0;
 
             // Step 1: Validating current page
@@ -144,7 +141,7 @@ class PopupUI {
                 // Provide more specific error messages
                 if (errorMsg.includes('recruiter') || errorMsg.includes('hiring team')) {
                     this.showStatus('❌ Could not find recruiter information. This might be because you need to sign in to LinkedIn or the job posting format has changed.', 'error');
-                } else if (errorMsg.includes('job description') || errorMsg.includes('company name')) {
+                } else if (errorMsg.includes('company') || errorMsg.includes('job title')) {
                     this.showStatus('❌ Could not extract job details. Please make sure you are on a complete job posting page and try again.', 'error');
                 } else {
                     this.showStatus('❌ ' + errorMsg, 'error');
@@ -169,20 +166,13 @@ class PopupUI {
             await fileStorage.saveFileLocation(this.fileLocationInput.value.trim());
             
             const saveResult = await fileStorage.saveJobData(jobData);
-            
+
             if (!saveResult.success) {
                 if (saveResult.isDuplicate) {
-                    // Show duplicate warning dialog
-                    this.updateProgressStep(currentStep, 'current');
-                    this.showStatus('⚠️ Duplicate job found. Please review the warning dialog.', 'warning');
-                    
+                    // Show duplicate warning and ask user if they want to overwrite
                     const shouldOverwrite = await this.showDuplicateWarning(jobData, saveResult.existingEntry);
                     
                     if (shouldOverwrite) {
-                        // User chose to overwrite
-                        this.updateProgressStep(currentStep, 'current');
-                        this.showStatus('🔄 Overwriting existing entry...', 'info');
-                        
                         const overwriteResult = await fileStorage.overwriteJobData(jobData);
                         
                         if (!overwriteResult.success) {
@@ -213,244 +203,70 @@ class PopupUI {
                 }
             } else {
                 this.updateProgressStep(currentStep, 'completed');
-                this.showStatus('✅ Job data saved to storage successfully!', 'success');
-                
-                // Automatically refresh the jobs table page if it's open
-                this.refreshJobsTableIfOpen();
+                this.showStatus('✅ Job data saved successfully!', 'success');
             }
 
-            this.updateProgressStep(currentStep, 'completed');
-
-            // Step 4: Completing save
+            // Step 4: Downloading CSV file
             currentStep++;
-            this.addProgressStep(currentStep, 'Completing save');
-            this.updateProgress(currentStep, totalSteps, 'Completing save');
-            this.updateProgressStep(currentStep, 'current');
-
-            this.updateProgressStep(currentStep, 'completed');
-            
-        } catch (error) {
-            console.error('Error in handleSaveJobClick:', error);
-            
-            // Enhanced error handling with permission-specific messages
-            if (error.message.includes('permission') || error.message.includes('denied')) {
-                this.showStatus('❌ Permission denied. Please check Chrome extension permissions and try again.', 'error');
-            } else if (error.message.includes('quota') || error.message.includes('space')) {
-                this.showStatus('❌ Storage quota exceeded. Please clear some data or use a different save location.', 'error');
-            } else if (error.message.includes('invalid') || error.message.includes('path')) {
-                this.showStatus('❌ Invalid file path. Please check your save location format (e.g., C:\\JobSearch\\)', 'error');
-            } else {
-                this.showStatus('❌ An error occurred: ' + error.message, 'error');
-            }
-        } finally {
-            this.showLoading(false);
-        }
-    }
-
-    async handleDownloadJobsClick() {
-        try {
-            // Check permissions first
-            const hasPermissions = await this.checkPermissions();
-            if (!hasPermissions) {
-                this.showStatus('⚠️ Some permissions are missing. The extension may not work properly. Please check Chrome extension settings.', 'warning');
-                // Continue anyway but warn the user
-            }
-
-            // Show loading state
-            this.showLoading(true);
-            this.clearProgressSteps();
-            
-            // Initialize progress tracking
-            const totalSteps = 3;
-            let currentStep = 0;
-
-            // Step 1: Loading stored jobs
-            currentStep++;
-            this.addProgressStep(currentStep, 'Loading stored jobs');
-            this.updateProgress(currentStep, totalSteps, 'Loading stored jobs');
-            this.updateProgressStep(currentStep, 'current');
-
-            const fileStorage = new FileStorageService();
-            
-            // Save the file location to storage before exporting
-            await fileStorage.saveFileLocation(this.fileLocationInput.value.trim());
-            
-            // Load stored data
-            await fileStorage.loadSettings();
-            
-            if (!fileStorage.storedData || fileStorage.storedData.length === 0) {
-                this.updateProgressStep(currentStep, 'error');
-                this.showStatus('❌ No job data found in storage. Please save some jobs first.', 'error');
-                this.showLoading(false);
-                return;
-            }
-
-            this.updateProgressStep(currentStep, 'completed');
-
-            // Step 2: Exporting to CSV
-            currentStep++;
-            this.addProgressStep(currentStep, 'Exporting to CSV');
-            this.updateProgress(currentStep, totalSteps, 'Exporting to CSV');
+            this.addProgressStep(currentStep, 'Downloading CSV file');
+            this.updateProgress(currentStep, totalSteps, 'Downloading CSV file');
             this.updateProgressStep(currentStep, 'current');
 
             try {
-                // Try to save to selected directory first, then fall back to preferred location
-                let exportResult;
-                if (fileStorage.directoryHandle) {
-                    exportResult = await fileStorage.saveToSelectedDirectory();
+                const downloadResult = await fileStorage.exportToPreferredLocation();
+                if (downloadResult.success) {
+                    this.updateProgressStep(currentStep, 'completed');
                 } else {
-                    exportResult = await fileStorage.exportToPreferredLocation();
-                }
-                
-                if (!exportResult.success) {
                     this.updateProgressStep(currentStep, 'error');
-                    this.showStatus('❌ Failed to export files: ' + exportResult.errors.join(', '), 'error');
-                    this.showLoading(false);
-                    return;
+                    console.warn('CSV download failed:', downloadResult.errors);
                 }
-            } catch (exportError) {
-                console.error('Export error:', exportError);
+            } catch (downloadError) {
                 this.updateProgressStep(currentStep, 'error');
-                
-                // Enhanced error handling for export issues
-                if (exportError.message.includes('permission') || exportError.message.includes('denied')) {
-                    this.showStatus('❌ Export permission denied. Please check Chrome extension permissions or use a different save location.', 'error');
-                } else if (exportError.message.includes('quota') || exportError.message.includes('space')) {
-                    this.showStatus('❌ Insufficient storage space. Please free up space or use a different save location.', 'error');
-                } else if (exportError.message.includes('invalid') || exportError.message.includes('path')) {
-                    this.showStatus('❌ Invalid file path. Please check your save location format (e.g., C:\\JobSearch\\)', 'error');
-                } else {
-                    this.showStatus('❌ Export failed: ' + exportError.message, 'error');
-                }
-                this.showLoading(false);
-                return;
+                console.error('Error downloading CSV:', downloadError);
             }
 
-            this.updateProgressStep(currentStep, 'completed');
-
-            // Step 3: Completing download
-            currentStep++;
-            this.addProgressStep(currentStep, 'Completing download');
-            this.updateProgress(currentStep, totalSteps, 'Completing download');
-            this.updateProgressStep(currentStep, 'current');
-
-            // Determine where files were saved
-            const fileLocation = this.fileLocationInput.value.trim();
-            let saveLocationMessage;
-            
-            if (fileLocation && fileLocation !== '') {
-                saveLocationMessage = `Files saved to Downloads folder with path structure: ${fileLocation}/`;
-            } else {
-                saveLocationMessage = 'Files saved to Downloads folder';
-            }
-
-            this.updateProgressStep(currentStep, 'completed');
-            this.showStatus(`✅ All job data exported successfully! ${saveLocationMessage}`, 'success');
-
-        } catch (error) {
-            console.error('Error in handleDownloadJobsClick:', error);
-            
-            // Enhanced error handling with permission-specific messages
-            if (error.message.includes('permission') || error.message.includes('denied')) {
-                this.showStatus('❌ Permission denied. Please check Chrome extension permissions and try again.', 'error');
-            } else if (error.message.includes('quota') || error.message.includes('space')) {
-                this.showStatus('❌ Storage quota exceeded. Please clear some data or use a different save location.', 'error');
-            } else if (error.message.includes('invalid') || error.message.includes('path')) {
-                this.showStatus('❌ Invalid file path. Please check your save location format (e.g., C:\\JobSearch\\)', 'error');
-            } else {
-                this.showStatus('❌ An error occurred: ' + error.message, 'error');
-            }
-        } finally {
-            this.showLoading(false);
-        }
-    }
-
-    async handleShowJobsClick() {
-        try {
-            // Check permissions first
-            const hasPermissions = await this.checkPermissions();
-            if (!hasPermissions) {
-                this.showStatus('⚠️ Some permissions are missing. The extension may not work properly. Please check Chrome extension settings.', 'warning');
-                // Continue anyway but warn the user
-            }
-
-            // Show loading state
-            this.showLoading(true);
-            this.clearProgressSteps();
-            
-            // Initialize progress tracking
-            const totalSteps = 2;
-            let currentStep = 0;
-
-            // Step 1: Loading stored jobs
-            currentStep++;
-            this.addProgressStep(currentStep, 'Loading stored jobs');
-            this.updateProgress(currentStep, totalSteps, 'Loading stored jobs');
-            this.updateProgressStep(currentStep, 'current');
-
-            const fileStorage = new FileStorageService();
-            
-            // Load stored data
-            await fileStorage.loadSettings();
-            
-            if (!fileStorage.storedData || fileStorage.storedData.length === 0) {
-                this.updateProgressStep(currentStep, 'error');
-                this.showStatus('❌ No job data found in storage. Please save some jobs first.', 'error');
-                this.showLoading(false);
-                return;
-            }
-
-            this.updateProgressStep(currentStep, 'completed');
-
-            // Step 2: Opening jobs table
+            // Step 5: Opening jobs table
             currentStep++;
             this.addProgressStep(currentStep, 'Opening jobs table');
             this.updateProgress(currentStep, totalSteps, 'Opening jobs table');
             this.updateProgressStep(currentStep, 'current');
 
             try {
-                // Create a new tab with the jobs table
                 await chrome.tabs.create({
                     url: chrome.runtime.getURL('jobs-table.html')
                 });
-                
                 this.updateProgressStep(currentStep, 'completed');
-                this.showStatus('✅ Jobs table opened in new tab!', 'success');
-                
-            } catch (tabError) {
-                console.error('Error opening jobs table:', tabError);
+            } catch (tableError) {
                 this.updateProgressStep(currentStep, 'error');
-                
-                if (tabError.message.includes('permission') || tabError.message.includes('denied')) {
-                    this.showStatus('❌ Permission denied. Cannot open new tab. Please check Chrome extension permissions.', 'error');
-                } else {
-                    this.showStatus('❌ Failed to open jobs table: ' + tabError.message, 'error');
-                }
+                console.error('Error opening jobs table:', tableError);
             }
 
-        } catch (error) {
-            console.error('Error in handleShowJobsClick:', error);
+            // Step 6: Finalizing
+            currentStep++;
+            this.addProgressStep(currentStep, 'Finalizing');
+            this.updateProgress(currentStep, totalSteps, 'Finalizing');
+            this.updateProgressStep(currentStep, 'completed');
+
+            // Show final success message
+            this.showStatus('✅ Everything saved successfully! Job data saved, CSV downloaded, and jobs table opened.', 'success');
             
-            // Enhanced error handling with permission-specific messages
-            if (error.message.includes('permission') || error.message.includes('denied')) {
-                this.showStatus('❌ Permission denied. Please check Chrome extension permissions and try again.', 'error');
-            } else if (error.message.includes('quota') || error.message.includes('space')) {
-                this.showStatus('❌ Storage quota exceeded. Please clear some data or use a different save location.', 'error');
-            } else if (error.message.includes('invalid') || error.message.includes('path')) {
-                this.showStatus('❌ Invalid file path. Please check your save location format (e.g., C:\\JobSearch\\)', 'error');
-            } else {
-                this.showStatus('❌ An error occurred: ' + error.message, 'error');
-            }
-        } finally {
+            // Hide loading after a short delay
+            setTimeout(() => {
+                this.showLoading(false);
+            }, 2000);
+
+        } catch (error) {
+            console.error('Error in main save operation:', error);
+            this.showStatus('❌ An unexpected error occurred: ' + error.message, 'error');
             this.showLoading(false);
         }
     }
 
     toggleSettings() {
-        if (this.settingsPanel && this.settingsToggle) {
+        if (this.settingsPanel && this.settingsButton) {
             const isVisible = this.settingsPanel.style.display === 'block';
             this.settingsPanel.style.display = isVisible ? 'none' : 'block';
-            this.settingsToggle.textContent = isVisible ? '⚙️ Settings' : '✕ Close';
+            this.settingsButton.textContent = isVisible ? '⚙️ Settings' : '✕ Close';
         }
     }
 
@@ -488,10 +304,22 @@ class PopupUI {
             console.log('LinkedIn URL but no matching patterns found');
         }
         
-        // Check for Indeed job postings
-        if (url.includes('indeed.com/viewjob') || url.includes('indeed.com/job/')) {
-            console.log('Indeed job URL found - returning true');
-            return true;
+        // Check for Indeed job postings - expanded patterns
+        if (url.includes('indeed.com')) {
+            console.log('Indeed URL found');
+            
+            // Check for various Indeed job posting patterns
+            if (url.includes('indeed.com/viewjob') || 
+                url.includes('indeed.com/job/') ||
+                url.includes('indeed.com/?vjk=') ||  // vjk parameter indicates job ID
+                url.includes('indeed.com/viewjob?') ||
+                url.includes('indeed.com/jobs/') ||
+                (url.includes('indeed.com') && (url.includes('vjk=') || url.includes('jk=')))) {
+                console.log('Indeed job URL pattern found - returning true');
+                return true;
+            }
+            
+            console.log('Indeed URL but no job posting patterns found');
         }
         
         // Check for other job sites
@@ -596,9 +424,8 @@ class PopupUI {
             this.loading.style.display = show ? 'block' : 'none';
         }
         // Disable/enable buttons during loading
-        if (this.saveJobButton) this.saveJobButton.disabled = show;
-        if (this.downloadJobsButton) this.downloadJobsButton.disabled = show;
-        if (this.showJobsButton) this.showJobsButton.disabled = show;
+        if (this.mainSaveButton) this.mainSaveButton.disabled = show;
+        // The download and show jobs buttons are removed, so no need to disable them here.
     }
 
     showStatus(message, type = 'info') {

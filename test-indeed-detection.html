@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indeed Detection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .url-test {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border-left: 4px solid #007bff;
+        }
+        .url-test.success {
+            border-left-color: #28a745;
+        }
+        .url-test.failure {
+            border-left-color: #dc3545;
+        }
+        .url-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 10px 0;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .result.failure {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .feature-list li:before {
+            content: "✅ ";
+            margin-right: 8px;
+        }
+        .url-examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .url-example {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+        .url-example h4 {
+            margin: 0 0 10px 0;
+            color: #495057;
+        }
+        .url-example code {
+            background: #e9ecef;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 11px;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Indeed Detection Test</h1>
+    
+    <div class="test-section">
+        <h2>Indeed Job Detection Enhancement</h2>
+        <p>This test demonstrates the improved Indeed job posting detection that now supports various URL patterns including the <code>vjk</code> parameter.</p>
+        
+        <h3>Enhanced Detection Patterns</h3>
+        <ul class="feature-list">
+            <li><strong>Traditional URLs:</strong> indeed.com/viewjob, indeed.com/job/</li>
+            <li><strong>VJK Parameter:</strong> indeed.com/?vjk= (job ID parameter)</li>
+            <li><strong>JK Parameter:</strong> indeed.com/?jk= (alternative job ID)</li>
+            <li><strong>Jobs Directory:</strong> indeed.com/jobs/</li>
+            <li><strong>Query Parameters:</strong> Various Indeed URL patterns</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>URL Pattern Examples</h2>
+        <div class="url-examples">
+            <div class="url-example">
+                <h4>Traditional View Job</h4>
+                <code>https://www.indeed.com/viewjob?jk=abc123</code>
+            </div>
+            <div class="url-example">
+                <h4>VJK Parameter (Your Case)</h4>
+                <code>https://ca.indeed.com/?vjk=d8abbcf17bebc848</code>
+            </div>
+            <div class="url-example">
+                <h4>Job Directory</h4>
+                <code>https://www.indeed.com/jobs?q=software+engineer</code>
+            </div>
+            <div class="url-example">
+                <h4>Complex Parameters</h4>
+                <code>https://ca.indeed.com/?from=gnav-passport--passport-webapp&vjk=d8abbcf17bebc848&advn=7127437458449984</code>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test URL Detection</h2>
+        <p>Enter an Indeed URL to test if it would be detected as a job posting:</p>
+        
+        <input type="text" id="urlInput" class="url-input" 
+               placeholder="Enter Indeed URL here..." 
+               value="https://ca.indeed.com/?from=gnav-passport--passport-webapp&vjk=d8abbcf17bebc848&advn=7127437458449984">
+        
+        <button class="test-button" onclick="testUrl()">Test URL</button>
+        <button class="test-button" onclick="testAllExamples()">Test All Examples</button>
+        
+        <div id="testResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Technical Implementation</h2>
+        <p><strong>Updated Detection Logic:</strong></p>
+        <pre><code>// Check for Indeed job postings - expanded patterns
+if (url.includes('indeed.com')) {
+    console.log('Indeed URL found');
+    
+    // Check for various Indeed job posting patterns
+    if (url.includes('indeed.com/viewjob') || 
+        url.includes('indeed.com/job/') ||
+        url.includes('indeed.com/?vjk=') ||  // vjk parameter indicates job ID
+        url.includes('indeed.com/viewjob?') ||
+        url.includes('indeed.com/jobs/') ||
+        (url.includes('indeed.com') && (url.includes('vjk=') || url.includes('jk=')))) {
+        console.log('Indeed job URL pattern found - returning true');
+        return true;
+    }
+    
+    console.log('Indeed URL but no job posting patterns found');
+}</code></pre>
+    </div>
+
+    <div class="test-section">
+        <h2>Benefits</h2>
+        <ul class="feature-list">
+            <li><strong>Broader Coverage:</strong> Detects more Indeed URL patterns</li>
+            <li><strong>VJK Support:</strong> Handles the vjk parameter used in your case</li>
+            <li><strong>Backward Compatibility:</strong> Still works with existing URL patterns</li>
+            <li><strong>Better User Experience:</strong> Fewer false negatives</li>
+            <li><strong>International Support:</strong> Works with country-specific Indeed domains</li>
+        </ul>
+    </div>
+
+    <script>
+        // Simulate the extension's isJobSite function
+        function isJobSite(url) {
+            if (!url) return false;
+            
+            console.log('Checking if URL is job site:', url);
+            
+            // Check for LinkedIn job postings - multiple patterns
+            if (url.includes('linkedin.com/jobs')) {
+                console.log('URL contains linkedin.com/jobs');
+                
+                // Allow any LinkedIn jobs URL that has a specific job ID
+                if (url.includes('currentJobId=') || url.includes('/jobs/view/')) {
+                    console.log('URL contains currentJobId= or /jobs/view/ - returning true');
+                    return true;
+                }
+                // Also allow collections pages that might have job details
+                if (url.includes('/jobs/collections/')) {
+                    console.log('URL contains /jobs/collections/ - returning true');
+                    return true;
+                }
+                
+                console.log('LinkedIn URL but no matching patterns found');
+            }
+            
+            // Check for Indeed job postings - expanded patterns
+            if (url.includes('indeed.com')) {
+                console.log('Indeed URL found');
+                
+                // Check for various Indeed job posting patterns
+                if (url.includes('indeed.com/viewjob') || 
+                    url.includes('indeed.com/job/') ||
+                    url.includes('indeed.com/?vjk=') ||  // vjk parameter indicates job ID
+                    url.includes('indeed.com/viewjob?') ||
+                    url.includes('indeed.com/jobs/') ||
+                    (url.includes('indeed.com') && (url.includes('vjk=') || url.includes('jk=')))) {
+                    console.log('Indeed job URL pattern found - returning true');
+                    return true;
+                }
+                
+                console.log('Indeed URL but no job posting patterns found');
+            }
+            
+            // Check for other job sites
+            const jobSites = [
+                'glassdoor.com',
+                'monster.com',
+                'careerbuilder.com',
+                'ziprecruiter.com',
+                'simplyhired.com',
+                'dice.com'
+            ];
+            
+            const otherJobSite = jobSites.some(site => url.includes(site));
+            if (otherJobSite) {
+                console.log('Other job site found - returning true');
+                return true;
+            }
+            
+            console.log('No job site patterns matched - returning false');
+            return false;
+        }
+
+        function testUrl() {
+            const url = document.getElementById('urlInput').value.trim();
+            const result = isJobSite(url);
+            const resultDiv = document.getElementById('testResult');
+            
+            if (result) {
+                resultDiv.className = 'result success';
+                resultDiv.textContent = '✅ DETECTED: This URL would be recognized as a job posting page';
+            } else {
+                resultDiv.className = 'result failure';
+                resultDiv.textContent = '❌ NOT DETECTED: This URL would not be recognized as a job posting page';
+            }
+        }
+
+        function testAllExamples() {
+            const examples = [
+                'https://www.indeed.com/viewjob?jk=abc123',
+                'https://ca.indeed.com/?vjk=d8abbcf17bebc848',
+                'https://www.indeed.com/jobs?q=software+engineer',
+                'https://ca.indeed.com/?from=gnav-passport--passport-webapp&vjk=d8abbcf17bebc848&advn=7127437458449984',
+                'https://www.indeed.com/job/software-engineer-123',
+                'https://www.linkedin.com/jobs/view/123456',
+                'https://www.google.com/search?q=jobs'
+            ];
+
+            const resultDiv = document.getElementById('testResult');
+            let results = '<h3>Test Results:</h3>';
+            
+            examples.forEach(url => {
+                const detected = isJobSite(url);
+                const status = detected ? '✅ DETECTED' : '❌ NOT DETECTED';
+                const className = detected ? 'success' : 'failure';
+                
+                results += `<div class="url-test ${className}">
+                    <strong>${status}</strong><br>
+                    <code>${url}</code>
+                </div>`;
+            });
+            
+            resultDiv.innerHTML = results;
+            resultDiv.className = 'result';
+        }
+
+        // Auto-test the default URL on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            testUrl();
+        });
+    </script>
+</body>
+</html>

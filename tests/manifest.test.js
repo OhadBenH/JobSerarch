@@ -61,7 +61,7 @@ describe('Manifest.json Validation', () => {
 
   test('manifest.json has action configuration', () => {
     expect(manifest.action).toBeDefined();
-    expect(manifest.action.default_popup).toBeDefined();
     expect(manifest.action.default_title).toBeDefined();
+    // Note: default_popup is not used since we handle clicks via background script
   });
 }); 

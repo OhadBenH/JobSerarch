@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Color Coding Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .demo-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .demo-table th,
+        .demo-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .demo-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+        .website-type {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+            background: #f8f9fa;
+            color: #6c757d;
+            border: 1px solid #dee2e6;
+        }
+        .website-type.linkedin-job {
+            background: #0077b5;
+            color: white;
+            border-color: #0077b5;
+        }
+        .website-type.indeed-job {
+            background: #003a9b;
+            color: white;
+            border-color: #003a9b;
+        }
+        .website-type.company-job {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+        .website-type.other-job {
+            background: #6c757d;
+            color: white;
+            border-color: #6c757d;
+        }
+        .color-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .feature-list li:before {
+            content: "✅ ";
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 Website Color Coding Test</h1>
+    
+    <div class="test-section">
+        <h2>Website Color Coding Feature</h2>
+        <p>This feature adds color coding to job website types, making it easier to quickly identify the source of each job posting.</p>
+        
+        <div class="color-legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #0077b5;"></div>
+                <span>LinkedIn</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #003a9b;"></div>
+                <span>Indeed</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #28a745;"></div>
+                <span>Company</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #6c757d;"></div>
+                <span>Other</span>
+            </div>
+        </div>
+        
+        <table class="demo-table">
+            <thead>
+                <tr>
+                    <th>Company</th>
+                    <th>Job Role</th>
+                    <th>Website</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Microsoft</td>
+                    <td>Software Engineer</td>
+                    <td><span class="website-type linkedin-job">LinkedIn</span></td>
+                    <td>Active</td>
+                </tr>
+                <tr>
+                    <td>Google</td>
+                    <td>Product Manager</td>
+                    <td><span class="website-type indeed-job">Indeed</span></td>
+                    <td>Active</td>
+                </tr>
+                <tr>
+                    <td>Apple</td>
+                    <td>Data Scientist</td>
+                    <td><span class="website-type company-job">Company</span></td>
+                    <td>Active</td>
+                </tr>
+                <tr>
+                    <td>Netflix</td>
+                    <td>UX Designer</td>
+                    <td><span class="website-type other-job">Other</span></td>
+                    <td>Active</td>
+                </tr>
+                <tr>
+                    <td>Amazon</td>
+                    <td>DevOps Engineer</td>
+                    <td><span class="website-type linkedin-job">LinkedIn</span></td>
+                    <td>Active</td>
+                </tr>
+                <tr>
+                    <td>Meta</td>
+                    <td>Frontend Developer</td>
+                    <td><span class="website-type indeed-job">Indeed</span></td>
+                    <td>Active</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="test-section">
+        <h2>Feature Benefits</h2>
+        <ul class="feature-list">
+            <li><strong>Quick Identification:</strong> Instantly recognize job sources at a glance</li>
+            <li><strong>Visual Organization:</strong> Color-coded badges make the table more scannable</li>
+            <li><strong>Brand Recognition:</strong> LinkedIn's signature blue color for familiarity</li>
+            <li><strong>Improved UX:</strong> Better visual hierarchy and information organization</li>
+            <li><strong>Professional Appearance:</strong> Polished, modern look with consistent styling</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>Color Scheme</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div style="padding: 15px; border-radius: 8px; background: #f8f9fa;">
+                <h4>LinkedIn</h4>
+                <p><strong>Color:</strong> #0077b5 (LinkedIn Blue)</p>
+                <p><strong>Purpose:</strong> Primary job source</p>
+            </div>
+            <div style="padding: 15px; border-radius: 8px; background: #f8f9fa;">
+                <h4>Indeed</h4>
+                <p><strong>Color:</strong> #003a9b (Indeed Blue)</p>
+                <p><strong>Purpose:</strong> Major job board</p>
+            </div>
+            <div style="padding: 15px; border-radius: 8px; background: #f8f9fa;">
+                <h4>Company</h4>
+                <p><strong>Color:</strong> #28a745 (Success Green)</p>
+                <p><strong>Purpose:</strong> Direct company sites</p>
+            </div>
+            <div style="padding: 15px; border-radius: 8px; background: #f8f9fa;">
+                <h4>Other</h4>
+                <p><strong>Color:</strong> #6c757d (Gray)</p>
+                <p><strong>Purpose:</strong> Miscellaneous sources</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Technical Implementation</h2>
+        <p><strong>CSS Classes:</strong></p>
+        <pre><code>.website-type.linkedin-job {
+    background: #0077b5;
+    color: white;
+    border-color: #0077b5;
+}
+
+.website-type.indeed-job {
+    background: #003a9b;
+    color: white;
+    border-color: #003a9b;
+}</code></pre>
+        
+        <p><strong>JavaScript Logic:</strong></p>
+        <pre><code>// Add color coding for different job sites
+if (job.websiteType === 'LinkedIn') {
+    websiteSpan.classList.add('linkedin-job');
+} else if (job.websiteType === 'Indeed') {
+    websiteSpan.classList.add('indeed-job');
+} else if (job.websiteType === 'Company') {
+    websiteSpan.classList.add('company-job');
+} else if (job.websiteType === 'Other') {
+    websiteSpan.classList.add('other-job');
+}</code></pre>
+    </div>
+
+    <div class="test-section">
+        <h2>How It Works</h2>
+        <ol>
+            <li><strong>Job Data:</strong> Each job has a websiteType property</li>
+            <li><strong>Rendering:</strong> When creating the table, check the website type</li>
+            <li><strong>Color Assignment:</strong> Add appropriate CSS class based on website type</li>
+            <li><strong>Visual Display:</strong> Website badges appear with color-coded backgrounds</li>
+            <li><strong>User Experience:</strong> Users can quickly identify job sources</li>
+        </ol>
+    </div>
+
+    <script>
+        // Interactive demo - change colors on click
+        document.querySelectorAll('.website-type').forEach(badge => {
+            badge.addEventListener('click', () => {
+                const types = ['linkedin-job', 'indeed-job', 'company-job', 'other-job'];
+                const currentType = types.find(type => badge.classList.contains(type));
+                const currentIndex = types.indexOf(currentType);
+                const nextIndex = (currentIndex + 1) % types.length;
+                
+                // Remove current class
+                badge.classList.remove(...types);
+                // Add next class
+                badge.classList.add(types[nextIndex]);
+                
+                // Update text
+                const typeNames = ['LinkedIn', 'Indeed', 'Company', 'Other'];
+                badge.textContent = typeNames[nextIndex];
+            });
+        });
+        
+        // Add click instruction
+        document.addEventListener('DOMContentLoaded', () => {
+            const instruction = document.createElement('div');
+            instruction.style.cssText = 'text-align: center; margin: 20px 0; padding: 10px; background: #e3f2fd; border-radius: 4px; color: #1976d2;';
+            instruction.innerHTML = '💡 <strong>Tip:</strong> Click on any website badge to cycle through different colors!';
+            document.querySelector('.demo-table').parentNode.insertBefore(instruction, document.querySelector('.demo-table'));
+        });
+    </script>
+</body>
+</html>
