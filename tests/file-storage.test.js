@@ -11,12 +11,14 @@ global.chrome = {
     local: {
       ...global.chrome.storage.local,
       get: jest.fn(),
-      set: jest.fn()
+      set: jest.fn(),
+      clear: jest.fn()
     },
     sync: {
       ...global.chrome.storage.sync,
       get: jest.fn(),
-      set: jest.fn()
+      set: jest.fn(),
+      clear: jest.fn()
     }
   }
 };
@@ -369,7 +371,7 @@ describe('File Storage Service', () => {
       const result = await fileStorage.saveJobData(mockJobData);
       
       expect(result.success).toBe(false);
-      expect(result.errors).toContain('This job has already been extracted. URL already exists in storage.');
+      expect(result.errors).toContain('This job has already been saved. URL already exists in storage.');
       expect(result.jsonSaved).toBe(false);
       expect(result.excelSaved).toBe(false);
     });
@@ -415,5 +417,63 @@ describe('File Storage Service', () => {
       expect(result.success).toBe(false);
       expect(result.errors).toContain('Storage permission denied. Please check Chrome extension permissions and try again.');
     });
+  });
+
+  describe('clearStorage', () => {
+      beforeEach(() => {
+          // Mock chrome.storage.local.clear
+          global.chrome.storage.local.clear = jest.fn((callback) => {
+              callback();
+          });
+          
+          // Mock chrome.storage.sync.clear
+          global.chrome.storage.sync.clear = jest.fn((callback) => {
+              callback();
+          });
+      });
+
+      it('should clear all stored job data and settings', async () => {
+          const fileStorage = new FileStorageService();
+          
+          // Set up some mock data
+          fileStorage.storedData = [
+              { url: 'test1.com', companyName: 'Test Company 1' },
+              { url: 'test2.com', companyName: 'Test Company 2' }
+          ];
+          
+          const result = await fileStorage.clearStorage();
+          
+          expect(result.success).toBe(true);
+          expect(result.message).toBe('All stored data and settings have been cleared successfully.');
+          expect(fileStorage.storedData).toEqual([]);
+          expect(global.chrome.storage.local.clear).toHaveBeenCalled();
+          expect(global.chrome.storage.sync.clear).toHaveBeenCalled();
+      });
+
+      it('should handle errors during clearing', async () => {
+          const fileStorage = new FileStorageService();
+          
+          // Mock chrome.storage.local.clear to throw an error
+          global.chrome.storage.local.clear = jest.fn((callback) => {
+              callback();
+          });
+          
+          global.chrome.storage.sync.clear = jest.fn((callback) => {
+              throw new Error('Storage clear failed');
+          });
+          
+          const result = await fileStorage.clearStorage();
+          
+          expect(result.success).toBe(false);
+          expect(result.errors).toContain('Failed to clear storage: Storage clear failed');
+      });
+
+      it('should return confirmation message', async () => {
+          const fileStorage = new FileStorageService();
+          
+          const result = await fileStorage.clearStorage();
+          
+          expect(result.message).toBe('All stored data and settings have been cleared successfully.');
+      });
   });
 }); 

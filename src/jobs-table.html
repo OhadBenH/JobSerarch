@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Saved Jobs - Job Search Manager</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8f9fa;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #007bff;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .header p {
+            margin: 8px 0 0 0;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .controls {
+            padding: 20px;
+            border-bottom: 1px solid #dee2e6;
+            background: #f8f9fa;
+        }
+        
+        .search-filter {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+        
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            max-width: 400px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        .filter-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            min-width: 150px;
+            flex-shrink: 0;
+        }
+        
+        .filter-group label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #495057;
+            white-space: nowrap;
+        }
+        
+        .filter-group select {
+            padding: 6px 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+            min-width: 120px;
+        }
+        
+        .stats {
+            margin-top: 15px;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .stats span {
+            font-weight: 500;
+            color: #007bff;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .jobs-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        .jobs-table th {
+            background: #f8f9fa;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .jobs-table td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #dee2e6;
+            vertical-align: top;
+        }
+        
+        .jobs-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .company-name {
+            font-weight: 600;
+            color: #007bff;
+        }
+        
+        .job-role {
+            font-weight: 500;
+            color: #495057;
+        }
+        
+        .job-family {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            text-align: center;
+            display: inline-block;
+        }
+        
+        .job-family.mechanical {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .job-family.system {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+        
+        .job-family.project {
+            background: #e8f5e8;
+            color: #388e3c;
+        }
+        
+        .job-family.other {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .website-type {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            background: #e9ecef;
+            color: #495057;
+        }
+        
+        .job-description {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .job-description.expanded {
+            white-space: normal;
+            max-width: none;
+        }
+        
+        .expand-btn {
+            background: none;
+            border: none;
+            color: #007bff;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 0;
+            text-decoration: underline;
+        }
+        
+        .expand-btn:hover {
+            color: #0056b3;
+        }
+        
+        .ai-summary {
+            max-width: 250px;
+            font-size: 13px;
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        .extracted-date {
+            font-size: 12px;
+            color: #6c757d;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .no-jobs {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        
+        .no-jobs h3 {
+            margin: 0 0 10px 0;
+            color: #495057;
+        }
+        
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #dc3545;
+        }
+        
+        .error h3 {
+            margin: 0 0 10px 0;
+        }
+        
+        .actions {
+            padding: 20px;
+            border-top: 1px solid #dee2e6;
+            background: #f8f9fa;
+            text-align: center;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            margin: 0 5px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .job-freshness {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .comments-input {
+            width: 100%;
+            min-width: 150px;
+            max-width: 200px;
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+            resize: vertical;
+            min-height: 60px;
+            font-family: inherit;
+        }
+        
+        .comments-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+        
+        .comments-input::placeholder {
+            color: #999;
+            font-style: italic;
+        }
+        
+        /* Responsive design for smaller screens */
+        @media (max-width: 768px) {
+            .search-filter {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+            
+            .search-box {
+                min-width: auto;
+                max-width: none;
+            }
+            
+            .filter-group {
+                min-width: auto;
+                justify-content: space-between;
+            }
+            
+            .filter-group select {
+                min-width: 100px;
+                flex: 1;
+            }
+            
+            .controls {
+                padding: 15px;
+            }
+            
+            .stats {
+                font-size: 13px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .header {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .controls {
+                padding: 10px;
+            }
+            
+            .search-filter {
+                gap: 8px;
+            }
+            
+            .filter-group {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 4px;
+            }
+            
+            .filter-group label {
+                font-size: 13px;
+            }
+            
+            .filter-group select {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 My Saved Jobs</h1>
+            <p>View and manage all your saved job applications</p>
+        </div>
+        
+        <div class="controls">
+            <div class="search-filter">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search jobs by company, role, or description...">
+                </div>
+                <div class="filter-group">
+                    <label for="jobFamilyFilter">Job Family:</label>
+                    <select id="jobFamilyFilter">
+                        <option value="">All</option>
+                        <option value="Mechanical Engineer">Mechanical Engineer</option>
+                        <option value="System(s) Engineer">System(s) Engineer</option>
+                        <option value="Project Manager">Project Manager</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="websiteFilter">Website:</label>
+                    <select id="websiteFilter">
+                        <option value="">All</option>
+                        <option value="LinkedIn">LinkedIn</option>
+                        <option value="Indeed">Indeed</option>
+                        <option value="Company">Company</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+            <div class="stats">
+                Total jobs: <span id="totalJobs">0</span> | 
+                Showing: <span id="showingJobs">0</span> |
+                Last updated: <span id="lastUpdated">-</span>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Loading your saved jobs...</p>
+            </div>
+            
+            <div id="noJobs" class="no-jobs" style="display: none;">
+                <h3>No jobs found</h3>
+                <p>You haven't saved any jobs yet. Start by extracting job information from job posting pages.</p>
+            </div>
+            
+            <div id="error" class="error" style="display: none;">
+                <h3>Error loading jobs</h3>
+                <p id="errorMessage">An error occurred while loading your saved jobs.</p>
+            </div>
+            
+            <table id="jobsTable" class="jobs-table" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Company</th>
+                        <th>Job Role</th>
+                        <th>Job Family</th>
+                        <th>Website</th>
+                        <th>Job Description</th>
+                        <th>Comments</th>
+                        <th>AI Summary</th>
+                        <th>Recruiter</th>
+                        <th>Days Since Published</th>
+                        <th>Saved</th>
+                    </tr>
+                </thead>
+                <tbody id="jobsTableBody">
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="actions">
+            <a href="#" class="btn btn-primary" id="refreshBtn">🔄 Refresh</a>
+            <a href="#" class="btn btn-success" id="exportBtn">📥 Export CSV</a>
+            <a href="#" class="btn btn-danger" id="clearBtn">🗑️ Clear All</a>
+        </div>
+    </div>
+    
+    <script src="file-storage.js"></script>
+    <script src="jobs-table.js"></script>
+</body>
+</html> 

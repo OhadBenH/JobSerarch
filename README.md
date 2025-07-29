@@ -2,17 +2,17 @@
 
 A powerful Chrome extension to streamline your job search process by automatically extracting job information from various job sites and saving it to organized files.
 
-## 🚀 Features
+## Features
 
-- **Automatic Job Data Extraction**: Extracts job information from LinkedIn, Indeed, and other job sites
-- **AI-Powered Summarization**: Uses OpenAI and Claude APIs to summarize job requirements and responsibilities
-- **Flexible Data Storage**: Saves data in both JSON and Excel (CSV) formats
-- **Duplicate Detection**: Prevents duplicate entries with user-friendly overwrite options
-- **Custom File Locations**: Specify where to save your job data files
-- **Progress Tracking**: Real-time progress updates during extraction
-- **Modular Design**: Easy to extend and maintain
+- **Job Data Extraction**: Automatically extracts job information from LinkedIn, Indeed, and company career pages
+- **AI Summarization**: Optional AI-powered job description summarization using OpenAI or Claude
+- **Persistent Window**: Keep the extension open while browsing different job sites
+- **File Storage**: Saves data in JSON and CSV formats to your specified location
+- **Duplicate Detection**: Warns about duplicate jobs with overwrite option
+- **Comments System**: Add personal notes to each job with auto-save functionality
+- **Job Management**: View, search, filter, and export all saved jobs
 
-## 📋 Extracted Information
+## 📋 Saved Information
 
 - Company name
 - Job role/title
@@ -20,9 +20,10 @@ A powerful Chrome extension to streamline your job search process by automatical
 - Job description
 - Website type (LinkedIn/Indeed/Company/Other)
 - Full website name
-- Job freshness (in days)
+- Days since published
 - Recruiter name (LinkedIn)
 - Company section and position summary
+- User comments (auto-saved)
 - Extraction timestamp (US/Eastern timezone)
 
 ## 🛠️ Installation
@@ -134,7 +135,7 @@ npm test tests/ai-integration.test.js
 ## 📊 Data Storage
 
 ### Internal Storage
-- **Chrome Storage Local**: Stores all extracted job data
+- **Chrome Storage Local**: Stores all saved job data
 - **Chrome Storage Sync**: Stores user preferences and settings
 
 ### File Export
@@ -162,7 +163,7 @@ npm test tests/ai-integration.test.js
    - Ensure the path is accessible
 
 3. **Empty Excel files**
-   - Verify that job data was successfully extracted
+   - Verify that job data was successfully saved
    - Check browser console for errors
 
 4. **AI summarization not working**

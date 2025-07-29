@@ -55,13 +55,14 @@ describe('BaseExtractor', () => {
         jobFamily: 'Other',
         jobDescription: 'COMPANY Tech Corp is a leading technology company... POSITION SUMMARY We are looking for a talented engineer...',
         recruiterName: null,
-        companySection: 'Tech Corp is a leading technology company...',
-        positionSummary: 'We are looking for a talented engineer...',
         websiteType: 'other',
         fullWebsite: 'Test Job Page',
         extractedAt: expect.any(String),
         jobFreshness: null,
-        url: expect.any(String)
+        url: expect.any(String),
+        companySection: 'Tech Corp is a leading technology company...',
+        positionSummary: 'We are looking for a talented engineer...',
+        comments: ''
       });
     });
 
@@ -272,8 +273,8 @@ describe('BaseExtractor', () => {
       // Should not have multiple consecutive spaces
       expect(cleanedDescription).not.toMatch(/\s{2,}/);
       
-      // Should start with the expected content
-      expect(cleanedDescription).toMatch(/^About the job AGRI-NEO – JOB DESCRIPTION/);
+      // Should start with the expected content (without "About the job" since it's filtered out)
+      expect(cleanedDescription).toMatch(/^AGRI-NEO – JOB DESCRIPTION/);
       
       // Should end with the expected content
       expect(cleanedDescription).toMatch(/how we can help\.$/);
@@ -303,6 +304,36 @@ describe('BaseExtractor', () => {
       
       expect(cleaned).toBe('Job Title Company Name Location Description');
     });
+
+    test('should remove newlines and tabs from job description', () => {
+      const description = 'This is a job description\nwith newlines\tand tabs';
+      const result = extractor.cleanJobDescription(description);
+      expect(result).toBe('This is a job description with newlines and tabs');
+    });
+
+    test('should filter out unwanted phrases from job description', () => {
+      const description = 'About the job This is the actual job description with details about the role and responsibilities.';
+      const result = extractor.cleanJobDescription(description);
+      expect(result).toBe('This is the actual job description with details about the role and responsibilities.');
+    });
+
+    test('should filter out multiple unwanted phrases at beginning', () => {
+      const description = 'About the job Job Description This is the actual content with more details.';
+      const result = extractor.cleanJobDescription(description);
+      expect(result).toBe('This is the actual content with more details.');
+    });
+
+    test('should handle case insensitive phrase filtering', () => {
+      const description = 'ABOUT THE JOB This is the actual job description about the role.';
+      const result = extractor.cleanJobDescription(description);
+      expect(result).toBe('This is the actual job description about the role.');
+    });
+
+    test('should not remove phrases in the middle of content', () => {
+      const description = 'This is a job description that mentions about the role in the middle of the text.';
+      const result = extractor.cleanJobDescription(description);
+      expect(result).toBe('This is a job description that mentions about the role in the middle of the text.');
+    });
   });
 });
 
@@ -321,25 +352,60 @@ describe('LinkedInExtractor', () => {
 
   describe('extractJobData', () => {
     test('should extract data from LinkedIn job page', () => {
-      const mockJobTitle = createMockElement('Senior Software Engineer');
+      const mockJobTitle = createMockElement('Software Engineer');
       const mockCompany = createMockElement('Tech Corp');
-      const mockDescription = createMockElement('We are looking for a senior software engineer to join our team. This role involves developing high-quality software solutions, collaborating with cross-functional teams, and contributing to the overall success of our products. The ideal candidate will have strong programming skills and experience with modern technologies.');
+      const mockDescription = createMockElement('We are seeking a talented software engineer to join our development team. This position requires strong programming skills, experience with modern frameworks, and the ability to work collaboratively in an agile environment.');
+      const mockMetadata = createMockElement('Toronto, ON · 2 weeks ago · Over 100 applicants');
 
       mockDocument.querySelector
         .mockReturnValueOnce(mockJobTitle) // .job-details-jobs-unified-top-card__job-title
         .mockReturnValueOnce(mockCompany)  // .job-details-jobs-unified-top-card__company-name
-        .mockReturnValueOnce(mockDescription); // .job-description
+        .mockReturnValueOnce(mockDescription); // .job-details-jobs-unified-top-card__job-description
+
+      mockDocument.querySelectorAll
+        .mockReturnValueOnce([mockMetadata]) // .job-details-jobs-unified-top-card__job-insight
+        .mockReturnValueOnce([]) // other selectors return empty
+        .mockReturnValueOnce([])
+        .mockReturnValueOnce([])
+        .mockReturnValueOnce([])
+        .mockReturnValueOnce([])
+        .mockReturnValueOnce([])
+        .mockReturnValueOnce([])
+        .mockReturnValueOnce([])
+        .mockReturnValueOnce([])
+        .mockReturnValueOnce([])
+        .mockReturnValueOnce([]);
 
       const result = extractor.extractJobData();
 
       expect(result.websiteType).toBe('linkedin');
       expect(result.fullWebsite).toBe('LinkedIn');
-      expect(result.jobRole).toBe('Senior Software Engineer');
+      expect(result.jobRole).toBe('Software Engineer');
       expect(result.companyName).toBe('Tech Corp');
-      expect(result.jobDescription).toBe('We are looking for a senior software engineer to join our team. This role involves developing high-quality software solutions, collaborating with cross-functional teams, and contributing to the overall success of our products. The ideal candidate will have strong programming skills and experience with modern technologies.');
-      expect(result.recruiterName).toBeNull();
+      expect(result.jobDescription).toBe('We are seeking a talented software engineer to join our development team. This position requires strong programming skills, experience with modern frameworks, and the ability to work collaboratively in an agile environment.');
       expect(result.extractedAt).toBeDefined();
-      expect(result.jobFreshness).toBeNull();
+      expect(result.jobFreshness).toBe(14); // 2 weeks ago = 14 days
+    });
+
+    test('should extract days since published from metadata', () => {
+      const mockMetadata = createMockElement('Toronto, ON · 3 days ago · Over 50 applicants');
+      
+      mockDocument.querySelectorAll
+        .mockReturnValueOnce([mockMetadata]) // .job-details-jobs-unified-top-card__job-insight
+        .mockReturnValueOnce([]) // other selectors return empty
+        .mockReturnValueOnce([])
+        .mockReturnValueOnce([])
+        .mockReturnValueOnce([])
+        .mockReturnValueOnce([])
+        .mockReturnValueOnce([])
+        .mockReturnValueOnce([])
+        .mockReturnValueOnce([])
+        .mockReturnValueOnce([])
+        .mockReturnValueOnce([])
+        .mockReturnValueOnce([]);
+
+      const result = extractor.extractJobFreshnessFromMetadata();
+      expect(result).toBe(3); // 3 days ago = 3 days
     });
 
     test('should handle LinkedIn specific selectors', () => {

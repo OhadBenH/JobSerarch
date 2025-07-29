@@ -105,13 +105,13 @@ describe('Content Script', () => {
   describe('Data Extraction', () => {
     test('extracts complete job data successfully', () => {
       const mockJobData = {
-        companyName: 'Tech Corp',
-        jobRole: 'Senior Software Engineer',
+        companyName: 'FAKE_TEST_COMPANY_XYZ123',
+        jobRole: 'FAKE_TEST_JOB_ROLE_ABC456',
         jobFamily: 'Other',
-        jobDescription: 'We are looking for a talented engineer...',
-        recruiterName: 'John Smith',
-        companySection: 'Tech Corp is a leading technology company...',
-        positionSummary: 'We are looking for a talented engineer...',
+        jobDescription: 'FAKE_TEST_DESCRIPTION_THIS_IS_TEST_DATA_DEF789',
+        recruiterName: 'FAKE_TEST_RECRUITER_GHI012',
+        companySection: 'FAKE_TEST_COMPANY_SECTION_JKL345',
+        positionSummary: 'FAKE_TEST_POSITION_SUMMARY_MNO678',
         websiteType: 'linkedin',
         fullWebsite: 'LinkedIn',
         extractedAt: '2024-01-01T00:00:00Z',
@@ -133,7 +133,7 @@ describe('Content Script', () => {
     test('handles missing data gracefully', () => {
       const mockJobData = {
         companyName: null,
-        jobRole: 'Software Engineer',
+        jobRole: 'FAKE_TEST_PARTIAL_JOB_ROLE_PQR901',
         jobDescription: null,
         recruiterName: null,
         companySection: null,
@@ -163,13 +163,13 @@ describe('Content Script', () => {
 
     test('identifies job family correctly', () => {
       const mechanicalJob = {
-        companyName: 'Tech Corp',
-        jobRole: 'Senior Mechanical Engineer',
+        companyName: 'FAKE_TEST_MECHANICAL_COMPANY_STU234',
+        jobRole: 'FAKE_TEST_SENIOR_MECHANICAL_ENGINEER_VWX567',
         jobFamily: 'Mechanical Engineer',
-        jobDescription: 'Design mechanical systems...',
-        recruiterName: 'Sarah Johnson',
-        companySection: 'Tech Corp is a leading technology company...',
-        positionSummary: 'Design mechanical systems...',
+        jobDescription: 'FAKE_TEST_DESIGN_MECHANICAL_SYSTEMS_YZA890',
+        recruiterName: 'FAKE_TEST_SARAH_JOHNSON_BCD123',
+        companySection: 'FAKE_TEST_MECHANICAL_COMPANY_SECTION_EFG456',
+        positionSummary: 'FAKE_TEST_DESIGN_MECHANICAL_SYSTEMS_HIJ789',
         websiteType: 'linkedin',
         fullWebsite: 'LinkedIn',
         extractedAt: '2024-01-01T00:00:00Z',
@@ -178,13 +178,13 @@ describe('Content Script', () => {
       };
 
       const systemJob = {
-        companyName: 'Tech Corp',
-        jobRole: 'Systems Engineer',
+        companyName: 'FAKE_TEST_SYSTEMS_COMPANY_KLM012',
+        jobRole: 'FAKE_TEST_SYSTEMS_ENGINEER_NOP345',
         jobFamily: 'System(s) Engineer',
-        jobDescription: 'System integration...',
-        recruiterName: 'Mike Chen',
-        companySection: 'Tech Corp is a leading technology company...',
-        positionSummary: 'System integration...',
+        jobDescription: 'FAKE_TEST_SYSTEM_INTEGRATION_QRS678',
+        recruiterName: 'FAKE_TEST_MIKE_CHEN_TUV901',
+        companySection: 'FAKE_TEST_SYSTEMS_COMPANY_SECTION_WXY234',
+        positionSummary: 'FAKE_TEST_SYSTEM_INTEGRATION_ZAB567',
         websiteType: 'indeed',
         fullWebsite: 'Indeed',
         extractedAt: '2024-01-01T00:00:00Z',
@@ -193,13 +193,13 @@ describe('Content Script', () => {
       };
 
       const projectJob = {
-        companyName: 'Tech Corp',
-        jobRole: 'Technical Project Manager',
+        companyName: 'FAKE_TEST_PROJECT_COMPANY_CDE890',
+        jobRole: 'FAKE_TEST_TECHNICAL_PROJECT_MANAGER_FGH123',
         jobFamily: 'Project Manager',
-        jobDescription: 'Lead project teams...',
-        recruiterName: 'Lisa Rodriguez',
-        companySection: 'Tech Corp is a leading technology company...',
-        positionSummary: 'Lead project teams...',
+        jobDescription: 'FAKE_TEST_LEAD_PROJECT_TEAMS_IJK456',
+        recruiterName: 'FAKE_TEST_LISA_RODRIGUEZ_LMN789',
+        companySection: 'FAKE_TEST_PROJECT_COMPANY_SECTION_OPQ012',
+        positionSummary: 'FAKE_TEST_LEAD_PROJECT_TEAMS_RST345',
         websiteType: 'company',
         fullWebsite: 'Tech Corp',
         extractedAt: '2024-01-01T00:00:00Z',
@@ -221,13 +221,13 @@ describe('Content Script', () => {
   describe('Message Handling', () => {
     test('responds to extraction requests', () => {
       const mockJobData = {
-        companyName: 'Tech Corp',
-        jobRole: 'Software Engineer',
+        companyName: 'FAKE_TEST_MESSAGE_COMPANY_UVW678',
+        jobRole: 'FAKE_TEST_MESSAGE_JOB_ROLE_XYZ901',
         jobFamily: 'Other',
-        jobDescription: 'Job description...',
-        recruiterName: 'David Wilson',
-        companySection: 'Tech Corp is a leading technology company...',
-        positionSummary: 'Job description...',
+        jobDescription: 'FAKE_TEST_MESSAGE_DESCRIPTION_ABC234',
+        recruiterName: 'FAKE_TEST_DAVID_WILSON_DEF567',
+        companySection: 'FAKE_TEST_MESSAGE_COMPANY_SECTION_GHI890',
+        positionSummary: 'FAKE_TEST_MESSAGE_DESCRIPTION_JKL123',
         websiteType: 'linkedin',
         fullWebsite: 'LinkedIn',
         extractedAt: '2024-01-01T00:00:00Z',
@@ -290,11 +290,11 @@ describe('Content Script', () => {
           return { companyName: null, jobRole: null, jobDescription: null };
         }
         return {
-          companyName: 'Tech Corp',
-          jobRole: 'Software Engineer',
-          jobDescription: 'Job description...',
-          companySection: 'Tech Corp is a leading technology company...',
-          positionSummary: 'Job description...'
+          companyName: 'FAKE_TEST_RETRY_COMPANY_MNO456',
+          jobRole: 'FAKE_TEST_RETRY_JOB_ROLE_PQR789',
+          jobDescription: 'FAKE_TEST_RETRY_DESCRIPTION_STU012',
+          companySection: 'FAKE_TEST_RETRY_COMPANY_SECTION_VWX345',
+          positionSummary: 'FAKE_TEST_RETRY_DESCRIPTION_YZA678'
         };
       });
 
@@ -306,7 +306,7 @@ describe('Content Script', () => {
       expect(result.companyName).toBeNull();
 
       result = mockExtractor.extractJobData();
-      expect(result.companyName).toBe('Tech Corp');
+      expect(result.companyName).toBe('FAKE_TEST_RETRY_COMPANY_MNO456');
     });
   });
 }); 

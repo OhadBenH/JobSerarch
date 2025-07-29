@@ -170,7 +170,7 @@ class FileStorageService {
                 'Website Type',
                 'Full Website',
                 'AI Summary',
-                'Extracted At'
+                'Saved At'
             ];
             
             let csvContent = headers.join(',') + '\n';
@@ -296,14 +296,15 @@ class FileStorageService {
                 'Job Role',
                 'Job Family',
                 'Job Description',
+                'Comments',
                 'Recruiter Name',
                 'Company Section',
                 'Position Summary',
                 'Website Type',
                 'Full Website',
                 'AI Summary',
-                'Extracted At',
-                'Job Freshness',
+                'Saved At',
+                'Days Since Published',
                 'URL'
             ];
             
@@ -395,7 +396,7 @@ class FileStorageService {
                 jsonSaved: false,
                 excelSaved: false,
                 existingEntry: existingEntry,
-                errors: ['This job has already been extracted. URL already exists in storage.']
+                errors: ['This job has already been saved. URL already exists in storage.']
             };
         }
 
@@ -465,6 +466,7 @@ class FileStorageService {
             jobrole: jobData.jobRole || 'N/A',
             jobfamily: jobData.jobFamily || 'N/A',
             jobdescription: jobData.jobDescription || 'N/A',
+            comments: jobData.comments || '',
             recruitername: jobData.recruiterName || 'N/A',
             companysection: jobData.companySection || 'N/A',
             positionsummary: jobData.positionSummary || 'N/A',
@@ -488,6 +490,48 @@ class FileStorageService {
         this.storedData = [];
         await chrome.storage.local.set({ storedJobData: [] });
         return { success: true };
+    }
+
+    // Clear all storage including job data and settings
+    async clearStorage() {
+        try {
+            // Clear job data from local storage
+            await new Promise((resolve, reject) => {
+                chrome.storage.local.clear(() => {
+                    if (chrome.runtime.lastError) {
+                        reject(new Error(chrome.runtime.lastError.message));
+                    } else {
+                        resolve();
+                    }
+                });
+            });
+            
+            // Clear settings from sync storage
+            await new Promise((resolve, reject) => {
+                chrome.storage.sync.clear(() => {
+                    if (chrome.runtime.lastError) {
+                        reject(new Error(chrome.runtime.lastError.message));
+                    } else {
+                        resolve();
+                    }
+                });
+            });
+            
+            // Reset local variables
+            this.storedData = [];
+            this.fileLocation = this.defaultLocation;
+            
+            return { 
+                success: true, 
+                message: 'All stored data and settings have been cleared successfully.'
+            };
+        } catch (error) {
+            console.error('Error clearing storage:', error);
+            return { 
+                success: false, 
+                errors: [`Failed to clear storage: ${error.message}`]
+            };
+        }
     }
 
     // Export all data to user's preferred location
@@ -551,8 +595,8 @@ class FileStorageService {
                 'Website Type',
                 'Full Website',
                 'AI Summary',
-                'Extracted At',
-                'Job Freshness',
+                'Saved At',
+                'Days Since Published',
                 'URL'
             ];
             
@@ -615,14 +659,15 @@ class FileStorageService {
                 'Job Role',
                 'Job Family',
                 'Job Description',
+                'Comments',
                 'Recruiter Name',
                 'Company Section',
                 'Position Summary',
                 'Website Type',
                 'Full Website',
                 'AI Summary',
-                'Extracted At',
-                'Job Freshness',
+                'Saved At',
+                'Days Since Published',
                 'URL'
             ];
             

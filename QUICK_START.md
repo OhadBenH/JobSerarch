@@ -33,11 +33,11 @@ Chrome → chrome://extensions/ → Developer Mode → Load unpacked → Select 
 
 ---
 
-## 📋 What Gets Extracted
+## 📋 What Gets Saved
 
 | Field | Description |
 |-------|-------------|
-| Company Name | Extracted from job posting |
+| Company Name | Saved from job posting |
 | Job Role | Job title/position |
 | Job Family | Auto-classified: Mechanical Engineer, System(s) Engineer, Project Manager, Other |
 | Job Description | Full job description text |
@@ -63,7 +63,7 @@ Chrome → chrome://extensions/ → Developer Mode → Load unpacked → Select 
 | Issue | Solution |
 |-------|----------|
 | Extension not working | Reload at `chrome://extensions/` |
-| No data extracted | Wait for page to load, try different job posting |
+| No data saved | Wait for page to load, try different job posting |
 | AI not working | Check API key, verify internet connection |
 | Files not saving | Check file location permissions, ensure downloads folder is accessible |
 

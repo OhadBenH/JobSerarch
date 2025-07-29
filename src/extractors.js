@@ -14,13 +14,65 @@ class BaseExtractor {
   extractJobFreshness(jobDescription) {
     if (!jobDescription) return null;
     
-    // More flexible patterns that can handle various separators
+    // More flexible patterns that can handle various separators and formats
     const freshnessPatterns = [
+      // Standard patterns
       /(\d+)\s*(?:week|weeks)\s*ago/i,
       /(\d+)\s*(?:day|days)\s*ago/i,
       /(\d+)\s*(?:month|months)\s*ago/i,
       /(\d+)\s*(?:hour|hours)\s*ago/i,
-      /(\d+)\s*(?:minute|minutes)\s*ago/i
+      /(\d+)\s*(?:minute|minutes)\s*ago/i,
+      // Patterns with different separators
+      /(\d+)\s*(?:week|weeks)\s*back/i,
+      /(\d+)\s*(?:day|days)\s*back/i,
+      /(\d+)\s*(?:month|months)\s*back/i,
+      // Patterns with "since" or "from"
+      /(\d+)\s*(?:week|weeks)\s*since/i,
+      /(\d+)\s*(?:day|days)\s*since/i,
+      /(\d+)\s*(?:month|months)\s*since/i,
+      // Patterns with "posted" or "published"
+      /posted\s*(\d+)\s*(?:week|weeks)\s*ago/i,
+      /posted\s*(\d+)\s*(?:day|days)\s*ago/i,
+      /posted\s*(\d+)\s*(?:month|months)\s*ago/i,
+      /published\s*(\d+)\s*(?:week|weeks)\s*ago/i,
+      /published\s*(\d+)\s*(?:day|days)\s*ago/i,
+      /published\s*(\d+)\s*(?:month|months)\s*ago/i,
+      // Patterns with bullet points or special characters
+      /[•·]\s*(\d+)\s*(?:week|weeks)\s*ago/i,
+      /[•·]\s*(\d+)\s*(?:day|days)\s*ago/i,
+      /[•·]\s*(\d+)\s*(?:month|months)\s*ago/i,
+      // Patterns with parentheses
+      /\((\d+)\s*(?:week|weeks)\s*ago\)/i,
+      /\((\d+)\s*(?:day|days)\s*ago\)/i,
+      /\((\d+)\s*(?:month|months)\s*ago\)/i,
+      // Patterns with "over" or "more than"
+      /over\s*(\d+)\s*(?:week|weeks)\s*ago/i,
+      /over\s*(\d+)\s*(?:day|days)\s*ago/i,
+      /over\s*(\d+)\s*(?:month|months)\s*ago/i,
+      /more\s*than\s*(\d+)\s*(?:week|weeks)\s*ago/i,
+      /more\s*than\s*(\d+)\s*(?:day|days)\s*ago/i,
+      /more\s*than\s*(\d+)\s*(?:month|months)\s*ago/i,
+      // Patterns with "less than" or "under"
+      /less\s*than\s*(\d+)\s*(?:week|weeks)\s*ago/i,
+      /less\s*than\s*(\d+)\s*(?:day|days)\s*ago/i,
+      /less\s*than\s*(\d+)\s*(?:month|months)\s*ago/i,
+      /under\s*(\d+)\s*(?:week|weeks)\s*ago/i,
+      /under\s*(\d+)\s*(?:day|days)\s*ago/i,
+      /under\s*(\d+)\s*(?:month|months)\s*ago/i,
+      // Patterns with "about" or "approximately"
+      /about\s*(\d+)\s*(?:week|weeks)\s*ago/i,
+      /about\s*(\d+)\s*(?:day|days)\s*ago/i,
+      /about\s*(\d+)\s*(?:month|months)\s*ago/i,
+      /approximately\s*(\d+)\s*(?:week|weeks)\s*ago/i,
+      /approximately\s*(\d+)\s*(?:day|days)\s*ago/i,
+      /approximately\s*(\d+)\s*(?:month|months)\s*ago/i,
+      // Patterns with "nearly" or "almost"
+      /nearly\s*(\d+)\s*(?:week|weeks)\s*ago/i,
+      /nearly\s*(\d+)\s*(?:day|days)\s*ago/i,
+      /nearly\s*(\d+)\s*(?:month|months)\s*ago/i,
+      /almost\s*(\d+)\s*(?:week|weeks)\s*ago/i,
+      /almost\s*(\d+)\s*(?:day|days)\s*ago/i,
+      /almost\s*(\d+)\s*(?:month|months)\s*ago/i
     ];
 
     for (let i = 0; i < freshnessPatterns.length; i++) {
@@ -40,6 +92,25 @@ class BaseExtractor {
       }
     }
     
+    // Try to find patterns with "yesterday", "today", etc.
+    const todayPatterns = [
+      /today/i,
+      /just\s*posted/i,
+      /new\s*posting/i,
+      /recently\s*posted/i
+    ];
+    
+    for (const pattern of todayPatterns) {
+      if (pattern.test(jobDescription)) {
+        return 0; // Posted today
+      }
+    }
+    
+    // Try to find patterns with "yesterday"
+    if (/yesterday/i.test(jobDescription)) {
+      return 1;
+    }
+    
     return null;
   }
 
@@ -53,6 +124,12 @@ class BaseExtractor {
       // Remove tabs and replace with spaces
       .replace(/\t/g, ' ')
       // Remove multiple consecutive spaces
+      .replace(/\s+/g, ' ')
+      // Remove common unwanted phrases (only exact matches at beginning)
+      .replace(/^(About the job|About this job|About the role|About this role|About the position|About this position)\s*/gi, '')
+      // Only remove exact "Job Description", "Role Description", "Position Description" at the very beginning
+      .replace(/^(Job Description|Role Description|Position Description)\s*/g, '')
+      // Remove multiple consecutive spaces again after phrase removal
       .replace(/\s+/g, ' ')
       // Trim leading and trailing whitespace
       .trim();
@@ -78,7 +155,8 @@ class BaseExtractor {
       jobFreshness: jobFreshness,
       url: window.location.href || '',
       companySection: this.extractCompanySection(),
-      positionSummary: this.extractPositionSummary()
+      positionSummary: this.extractPositionSummary(),
+      comments: '' // User comments field
     };
   }
 
@@ -195,13 +273,85 @@ class BaseExtractor {
 }
 
 class LinkedInExtractor extends BaseExtractor {
+  // Debug method to help identify freshness extraction issues
+  debugFreshnessExtraction() {
+    console.log('=== Freshness Extraction Debug ===');
+    
+    // Check LinkedIn selectors
+    const linkedinSelectors = [
+      '.job-details-jobs-unified-top-card__job-insight',
+      '[data-testid="job-details-jobs-unified-top-card__job-insight"]',
+      '.job-details-jobs-unified-top-card__metadata',
+      '[data-testid="job-details-jobs-unified-top-card__metadata"]',
+      '.job-details-jobs-unified-top-card__subtitle',
+      '[data-testid="job-details-jobs-unified-top-card__subtitle"]',
+      '.jobs-unified-top-card__job-insight',
+      '.jobs-unified-top-card__metadata',
+      '.jobs-unified-top-card__subtitle'
+    ];
+    
+    console.log('Checking LinkedIn selectors:');
+    linkedinSelectors.forEach(selector => {
+      const elements = this.document.querySelectorAll(selector);
+      if (elements && elements.length > 0) {
+        console.log(`Found ${elements.length} elements for selector: ${selector}`);
+        elements.forEach((element, index) => {
+          console.log(`  Element ${index + 1}: "${element.textContent.trim()}"`);
+        });
+      }
+    });
+    
+    // Check Indeed selectors
+    const indeedSelectors = [
+      '[data-testid="jobsearch-JobInfoHeader-datePosted"]',
+      '.jobsearch-JobInfoHeader-datePosted',
+      '.jobsearch-JobInfoHeader-subtitle',
+      '.jobsearch-JobInfoHeader'
+    ];
+    
+    console.log('Checking Indeed selectors:');
+    indeedSelectors.forEach(selector => {
+      const elements = this.document.querySelectorAll(selector);
+      if (elements && elements.length > 0) {
+        console.log(`Found ${elements.length} elements for selector: ${selector}`);
+        elements.forEach((element, index) => {
+          console.log(`  Element ${index + 1}: "${element.textContent.trim()}"`);
+        });
+      }
+    });
+    
+    // Check generic selectors
+    const genericSelectors = [
+      '[class*="date"]',
+      '[class*="posted"]',
+      '[class*="metadata"]',
+      '[class*="subtitle"]'
+    ];
+    
+    console.log('Checking generic selectors:');
+    genericSelectors.forEach(selector => {
+      const elements = this.document.querySelectorAll(selector);
+      if (elements && elements.length > 0) {
+        console.log(`Found ${elements.length} elements for selector: ${selector}`);
+        elements.forEach((element, index) => {
+          const text = element.textContent.trim();
+          if (text.length < 100) { // Only log short text to avoid spam
+            console.log(`  Element ${index + 1}: "${text}"`);
+          }
+        });
+      }
+    });
+    
+    console.log('=== End Freshness Extraction Debug ===');
+  }
+
   extractJobData() {
     const jobTitle = this.extractJobTitle();
     const companyName = this.extractCompanyName();
     const jobDescription = this.extractJobDescription();
     const recruiterName = this.extractRecruiterName();
     const jobFamily = this.determineJobFamily(jobTitle, jobDescription);
-    const jobFreshness = this.extractJobFreshness(jobDescription);
+    const jobFreshness = this.extractJobFreshnessFromMetadata();
 
     return {
       companyName,
@@ -217,6 +367,85 @@ class LinkedInExtractor extends BaseExtractor {
       companySection: this.extractCompanySection(),
       positionSummary: this.extractPositionSummary()
     };
+  }
+
+  // Extract job freshness from LinkedIn metadata section
+  extractJobFreshnessFromMetadata() {
+    // Try multiple LinkedIn selectors for metadata that contains freshness info
+    const selectors = [
+      // Primary LinkedIn selectors
+      '.job-details-jobs-unified-top-card__job-insight',
+      '[data-testid="job-details-jobs-unified-top-card__job-insight"]',
+      '.job-details-jobs-unified-top-card__metadata',
+      '[data-testid="job-details-jobs-unified-top-card__metadata"]',
+      '.job-details-jobs-unified-top-card__subtitle',
+      '[data-testid="job-details-jobs-unified-top-card__subtitle"]',
+      '.job-details-jobs-unified-top-card__job-insight span',
+      '.job-details-jobs-unified-top-card__metadata span',
+      // Additional LinkedIn selectors
+      '.jobs-unified-top-card__job-insight',
+      '.jobs-unified-top-card__metadata',
+      '.jobs-unified-top-card__subtitle',
+      '.jobs-unified-top-card__job-insight span',
+      '.jobs-unified-top-card__metadata span',
+      // Broader selectors for metadata
+      '[class*="job-insight"]',
+      '[class*="metadata"]',
+      '[class*="subtitle"]',
+      '[class*="posted"]',
+      '[class*="date"]',
+      // More specific LinkedIn patterns
+      '.job-details-jobs-unified-top-card__job-insight .jobs-unified-top-card__job-insight',
+      '.job-details-jobs-unified-top-card__metadata .jobs-unified-top-card__metadata',
+      // Fallback selectors
+      '.job-details-jobs-unified-top-card__content',
+      '.jobs-unified-top-card__content',
+      '[data-testid*="job-insight"]',
+      '[data-testid*="metadata"]',
+      '[data-testid*="subtitle"]'
+    ];
+    
+    for (const selector of selectors) {
+      const elements = this.document.querySelectorAll(selector);
+      if (elements && elements.length > 0) {
+        for (const element of elements) {
+          if (element && element.textContent.trim()) {
+            const content = element.textContent.trim();
+            const freshness = this.extractJobFreshness(content);
+            if (freshness !== null) {
+              return freshness;
+            }
+          }
+        }
+      }
+    }
+    
+    // Try searching in the header area specifically
+    const headerSelectors = [
+      '.job-details-jobs-unified-top-card',
+      '.jobs-unified-top-card',
+      '.job-details-jobs-unified-top-card__header',
+      '.jobs-unified-top-card__header'
+    ];
+    
+    for (const selector of headerSelectors) {
+      const header = this.document.querySelector(selector);
+      if (header && header.textContent.trim()) {
+        const content = header.textContent.trim();
+        const freshness = this.extractJobFreshness(content);
+        if (freshness !== null) {
+          return freshness;
+        }
+      }
+    }
+    
+    // If no specific metadata found, try searching the entire page for freshness patterns
+    const pageText = this.document.body ? this.document.body.textContent : '';
+    if (pageText) {
+      return this.extractJobFreshness(pageText);
+    }
+    
+    return null;
   }
 
   extractJobTitle() {
@@ -367,7 +596,7 @@ class IndeedExtractor extends BaseExtractor {
     const companyName = this.extractCompanyName();
     const jobDescription = this.extractJobDescription();
     const jobFamily = this.determineJobFamily(jobTitle, jobDescription);
-    const jobFreshness = this.extractJobFreshness(jobDescription);
+    const jobFreshness = this.extractJobFreshnessFromMetadata();
 
     return {
       companyName,
@@ -382,6 +611,83 @@ class IndeedExtractor extends BaseExtractor {
       companySection: this.extractCompanySection(),
       positionSummary: this.extractPositionSummary()
     };
+  }
+
+  // Extract job freshness from Indeed metadata section
+  extractJobFreshnessFromMetadata() {
+    // Try multiple Indeed selectors for metadata that contains freshness info
+    const selectors = [
+      // Primary Indeed selectors
+      '[data-testid="jobsearch-JobInfoHeader-datePosted"]',
+      '.jobsearch-JobInfoHeader-datePosted',
+      '[class*="jobsearch-JobInfoHeader-datePosted"]',
+      '.jobsearch-JobInfoHeader-date',
+      '[class*="datePosted"]',
+      '[class*="date-posted"]',
+      // Additional Indeed selectors
+      '.jobsearch-JobInfoHeader-subtitle',
+      '[class*="jobsearch-JobInfoHeader-subtitle"]',
+      '.jobsearch-JobInfoHeader-companyName',
+      '[class*="jobsearch-JobInfoHeader-companyName"]',
+      // Broader selectors for metadata
+      '[class*="metadata"]',
+      '[class*="subtitle"]',
+      '[class*="posted"]',
+      '[class*="date"]',
+      '[class*="time"]',
+      // More specific Indeed patterns
+      '.jobsearch-JobInfoHeader',
+      '[data-testid="jobsearch-JobInfoHeader"]',
+      '.jobsearch-JobInfoHeader *',
+      // Fallback selectors
+      '.jobsearch-JobInfoHeader-datePosted span',
+      '.jobsearch-JobInfoHeader-subtitle span',
+      '[data-testid*="datePosted"]',
+      '[data-testid*="subtitle"]',
+      '[data-testid*="metadata"]'
+    ];
+    
+    for (const selector of selectors) {
+      const elements = this.document.querySelectorAll(selector);
+      if (elements && elements.length > 0) {
+        for (const element of elements) {
+          if (element && element.textContent.trim()) {
+            const content = element.textContent.trim();
+            const freshness = this.extractJobFreshness(content);
+            if (freshness !== null) {
+              return freshness;
+            }
+          }
+        }
+      }
+    }
+    
+    // Try searching in the header area specifically
+    const headerSelectors = [
+      '.jobsearch-JobInfoHeader',
+      '[data-testid="jobsearch-JobInfoHeader"]',
+      '.jobsearch-JobInfoHeader-container',
+      '.jobsearch-JobInfoHeader-content'
+    ];
+    
+    for (const selector of headerSelectors) {
+      const header = this.document.querySelector(selector);
+      if (header && header.textContent.trim()) {
+        const content = header.textContent.trim();
+        const freshness = this.extractJobFreshness(content);
+        if (freshness !== null) {
+          return freshness;
+        }
+      }
+    }
+    
+    // If no specific metadata found, try searching the entire page for freshness patterns
+    const pageText = this.document.body ? this.document.body.textContent : '';
+    if (pageText) {
+      return this.extractJobFreshness(pageText);
+    }
+    
+    return null;
   }
 
   extractJobTitle() {
@@ -481,7 +787,7 @@ class GenericExtractor extends BaseExtractor {
     const companyName = this.extractCompanyName();
     const jobDescription = this.extractJobDescription();
     const jobFamily = this.determineJobFamily(jobTitle, jobDescription);
-    const jobFreshness = this.extractJobFreshness(jobDescription);
+    const jobFreshness = this.extractJobFreshnessFromMetadata();
 
     return {
       companyName,
@@ -496,6 +802,90 @@ class GenericExtractor extends BaseExtractor {
       companySection: this.extractCompanySection(),
       positionSummary: this.extractPositionSummary()
     };
+  }
+
+  // Extract job freshness from generic page metadata
+  extractJobFreshnessFromMetadata() {
+    // Try common selectors for metadata that might contain freshness info
+    const selectors = [
+      // Common job site patterns
+      '[class*="date"]',
+      '[class*="posted"]',
+      '[class*="time"]',
+      '[class*="metadata"]',
+      '[class*="subtitle"]',
+      '[class*="info"]',
+      // Specific job-related selectors
+      '.job-date',
+      '.posted-date',
+      '.job-meta',
+      '.job-info',
+      '.job-metadata',
+      '.job-subtitle',
+      '.job-header',
+      '.job-title-meta',
+      // Data attributes
+      '[data-date]',
+      '[data-posted]',
+      '[data-time]',
+      '[data-meta]',
+      // Broader patterns
+      '[class*="header"]',
+      '[class*="title"]',
+      '[class*="meta"]',
+      '[class*="info"]',
+      // Fallback selectors
+      '.job-header *',
+      '.job-title *',
+      '.job-meta *',
+      '.job-info *'
+    ];
+    
+    for (const selector of selectors) {
+      const elements = this.document.querySelectorAll(selector);
+      if (elements && elements.length > 0) {
+        for (const element of elements) {
+          if (element && element.textContent.trim()) {
+            const content = element.textContent.trim();
+            const freshness = this.extractJobFreshness(content);
+            if (freshness !== null) {
+              return freshness;
+            }
+          }
+        }
+      }
+    }
+    
+    // Try searching in common header areas
+    const headerSelectors = [
+      'header',
+      '.header',
+      '.job-header',
+      '.page-header',
+      '.content-header',
+      '.main-header',
+      '.job-title-container',
+      '.job-info-container'
+    ];
+    
+    for (const selector of headerSelectors) {
+      const header = this.document.querySelector(selector);
+      if (header && header.textContent.trim()) {
+        const content = header.textContent.trim();
+        const freshness = this.extractJobFreshness(content);
+        if (freshness !== null) {
+          return freshness;
+        }
+      }
+    }
+    
+    // If no specific metadata found, try searching the entire page for freshness patterns
+    const pageText = this.document.body ? this.document.body.textContent : '';
+    if (pageText) {
+      return this.extractJobFreshness(pageText);
+    }
+    
+    return null;
   }
 
   extractJobTitle() {

@@ -44,7 +44,7 @@
 1. **Navigate to any job posting page** (LinkedIn, Indeed, etc.)
 2. **Click the extension icon**
 3. **Click "Extract Job Information"**
-4. **Check for success message** - you should see "Job information extracted successfully!"
+4. **Check for success message** - you should see "Job information saved successfully!"
 
 ---
 
@@ -72,14 +72,14 @@
 ### Step 3: Verify Data Extraction
 1. **Check the status message** in the popup
 2. **Look for success indicators**:
-   - ✅ "Job information extracted successfully!"
+   - ✅ "Job information saved successfully!"
    - ✅ File saved confirmation
    - ✅ AI summary generated (if enabled)
 
 ### Step 4: Access Your Data
 1. **Navigate to your specified save location**
 2. **Find the saved files**:
-   - `job_data.json` - Contains all extracted job information
+   - `job_data.json` - Contains all saved job information
    - `job_data.xlsx` - Excel spreadsheet with job data in rows
 
 ---
@@ -133,11 +133,24 @@ The extension automatically classifies jobs into these families:
 - **Project Manager** - Contains "project", "program", "management", "PM", etc.
 - **Other** - All other job types
 
+### Persistent Window Feature
+- **Stay Open**: Open a persistent window that stays open while you browse different job sites
+- **Easy Access**: Click "Open Persistent Window" in the popup to launch it
+- **Full Functionality**: All features work in the persistent window - save jobs, download data, view jobs, and manage settings
+- **Convenient Workflow**: Navigate to job sites, click "Save to my jobs" in the persistent window, and continue browsing
+- **No Reopening**: Unlike the popup, the persistent window doesn't close when you navigate between pages
+
+### Comments Feature
+- **Add Personal Notes**: Each job has a comments field where you can add your own notes
+- **Auto-Save**: Comments are automatically saved after 1 second of inactivity
+- **Persistent Storage**: Comments are stored with your job data and included in exports
+- **Easy Access**: Comments are visible in the jobs table and can be edited anytime
+
 ### Data Validation
 The extension validates extracted data and will:
 - ✅ Continue if optional fields are missing
 - ⚠️ Show warnings for missing required fields
-- ❌ Alert you if critical data cannot be extracted
+- ❌ Alert you if critical data cannot be saved
 
 ### Error Handling
 The extension is designed to be modular:
@@ -159,7 +172,7 @@ The extension is designed to be modular:
    - Click the refresh icon on the extension card
    - Or remove and re-add the extension
 
-### Data Extraction Fails
+### Data Saving Fails
 1. **Ensure you're on a supported site**:
    - LinkedIn, Indeed, Glassdoor, etc.
    - Company career pages
