@@ -1,12 +1,10 @@
 // Content script for job data extraction
-// Note: extractors and AI integration will be loaded via manifest
+// Note: extractors will be loaded via manifest
 
 // Content script for job data extraction
 class JobDataExtractor {
   constructor() {
     this.extractor = null;
-    // Initialize AI service only if AIService is available (for testing compatibility)
-    this.aiService = typeof AIService !== 'undefined' ? new AIService() : null;
     this.retryCount = 0;
     this.maxRetries = 2; // Reduced from 3
     this.retryDelay = 500; // Reduced from 1000ms to 500ms
@@ -23,26 +21,8 @@ class JobDataExtractor {
     }
   }
 
-  // Initialize AI providers based on settings
-  initializeAIProviders(aiSettings) {
-    if (!this.aiService) {
-      console.error('AI service not available - extension not properly loaded');
-      return;
-    }
-    
-    if (aiSettings.provider === 'openai' && aiSettings.openaiKey) {
-      const openAIProvider = new OpenAIProvider(aiSettings.openaiKey);
-      this.aiService.registerProvider('openai', openAIProvider);
-      this.aiService.setActiveProvider('openai');
-    } else if (aiSettings.provider === 'claude' && aiSettings.claudeKey) {
-      const claudeProvider = new ClaudeProvider(aiSettings.claudeKey);
-      this.aiService.registerProvider('claude', claudeProvider);
-      this.aiService.setActiveProvider('claude');
-    }
-  }
-
   // Extract job data with retry logic for dynamic content
-  async extractJobData(aiSettings = null) {
+  async extractJobData() {
     if (!this.extractor) {
       this.initializeExtractor();
     }
@@ -57,7 +37,7 @@ class JobDataExtractor {
         console.log(`Extraction attempt ${this.retryCount} failed, retrying in ${this.retryDelay}ms...`);
         
         await new Promise(resolve => setTimeout(resolve, this.retryDelay));
-        return this.extractJobData(aiSettings);
+        return this.extractJobData();
       }
 
       // Reset retry count on successful extraction
@@ -65,34 +45,9 @@ class JobDataExtractor {
         this.retryCount = 0;
       }
 
-      // Initialize AI providers if settings provided
-      let aiSummary = null;
-      if (aiSettings && aiSettings.provider && jobData.jobDescription && this.aiService) {
-        this.initializeAIProviders(aiSettings);
-        try {
-          aiSummary = await this.aiService.summarizeJob(jobData.jobDescription);
-        } catch (aiError) {
-          console.error('AI summarization error:', aiError);
-          aiSummary = {
-            success: false,
-            data: null,
-            provider: aiSettings.provider,
-            errors: [aiError.message]
-          };
-        }
-      } else if (aiSettings && aiSettings.provider && !this.aiService) {
-        aiSummary = {
-          success: false,
-          data: null,
-          provider: aiSettings.provider,
-          errors: ['AI service not available']
-        };
-      }
-
       return {
         success: validation.isValid,
         data: jobData,
-        aiSummary: aiSummary,
         errors: validation.errors,
         extractionAttempts: this.retryCount + 1
       };
@@ -101,7 +56,6 @@ class JobDataExtractor {
       return {
         success: false,
         data: null,
-        aiSummary: null,
         errors: [error.message],
         extractionAttempts: this.retryCount + 1
       };
@@ -126,7 +80,7 @@ class JobDataExtractor {
   }
 
   // Enhanced extraction with dynamic content support (optimized)
-  async extractJobDataWithRetry(aiSettings = null) {
+  async extractJobDataWithRetry() {
     // Wait for essential job page elements to load (reduced timeout and selectors)
     const essentialSelectors = [
       'h1',
@@ -147,7 +101,7 @@ class JobDataExtractor {
       await this.waitForContent(essentialSelectors, 2000);
     }
 
-    return this.extractJobData(aiSettings);
+    return this.extractJobData();
   }
 }
 
@@ -159,8 +113,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'extractJobData') {
     console.log('Received extraction request from popup');
     
-    // Extract job data asynchronously with AI settings
-    jobExtractor.extractJobDataWithRetry(message.aiSettings)
+    // Extract job data asynchronously
+    jobExtractor.extractJobDataWithRetry()
       .then(result => {
         console.log('Extraction result:', result);
         sendResponse(result);
@@ -170,13 +124,92 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse({
           success: false,
           data: null,
-          aiSummary: null,
           errors: [error.message],
           extractionAttempts: 0
         });
       });
     
     // Return true to indicate async response
+    return true;
+  }
+  
+  if (message.action === 'checkJobIndicators') {
+    console.log('Received job indicators check request');
+    
+    try {
+      const indicators = message.indicators || [];
+      let hasJobContent = false;
+      
+      // Check for common job-related elements
+      const jobSelectors = [
+        // LinkedIn selectors
+        '[data-testid="job-details-jobs-unified-top-card__job-title"]',
+        '.job-details-jobs-unified-top-card__job-title',
+        '[data-testid="job-details-jobs-unified-top-card__hiring-team"]',
+        '.job-details-jobs-unified-top-card__hiring-team',
+        '[data-testid="job-details-jobs-unified-top-card__job-description"]',
+        '.job-details-jobs-unified-top-card__job-description',
+        // Indeed selectors
+        '[data-testid="jobsearch-JobInfoHeader-title"]',
+        '.jobsearch-JobInfoHeader-title',
+        '[data-testid="jobsearch-JobInfoHeader-companyName"]',
+        '.jobsearch-JobInfoHeader-companyName',
+        // Generic selectors
+        'h1',
+        '[class*="job-title"]',
+        '[class*="job-description"]',
+        '[class*="company-name"]',
+        '[class*="hiring-team"]'
+      ];
+      
+      // Check if any job-related elements exist
+      for (const selector of jobSelectors) {
+        const element = document.querySelector(selector);
+        if (element && element.textContent.trim()) {
+          hasJobContent = true;
+          break;
+        }
+      }
+      
+      // Also check for login/signin indicators
+      const loginIndicators = [
+        'input[type="email"]',
+        'input[type="password"]',
+        '[class*="login"]',
+        '[class*="signin"]',
+        '[class*="sign-in"]',
+        'button[type="submit"]'
+      ];
+      
+      let hasLoginContent = false;
+      for (const selector of loginIndicators) {
+        const element = document.querySelector(selector);
+        if (element) {
+          hasLoginContent = true;
+          break;
+        }
+      }
+      
+      // If we have login content but no job content, it's likely a login page
+      if (hasLoginContent && !hasJobContent) {
+        hasJobContent = false;
+      }
+      
+      console.log('Job content check result:', { hasJobContent, hasLoginContent });
+      
+      sendResponse({
+        hasJobContent: hasJobContent,
+        hasLoginContent: hasLoginContent
+      });
+    } catch (error) {
+      console.error('Error checking job indicators:', error);
+      sendResponse({
+        hasJobContent: false,
+        hasLoginContent: false,
+        error: error.message
+      });
+    }
+    
     return true;
   }
 });

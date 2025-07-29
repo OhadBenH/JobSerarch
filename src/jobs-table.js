@@ -132,13 +132,11 @@ class JobsTable {
             const companyCell = document.createElement('td');
             companyCell.className = 'company-name';
             companyCell.textContent = job.companyName || 'N/A';
-            row.appendChild(companyCell);
 
             // Job Role
             const roleCell = document.createElement('td');
             roleCell.className = 'job-role';
             roleCell.textContent = job.jobRole || 'N/A';
-            row.appendChild(roleCell);
 
             // Job Family
             const familyCell = document.createElement('td');
@@ -146,7 +144,6 @@ class JobsTable {
             familySpan.className = `job-family ${this.getJobFamilyClass(job.jobFamily)}`;
             familySpan.textContent = job.jobFamily || 'N/A';
             familyCell.appendChild(familySpan);
-            row.appendChild(familyCell);
 
             // Website
             const websiteCell = document.createElement('td');
@@ -154,7 +151,6 @@ class JobsTable {
             websiteSpan.className = 'website-type';
             websiteSpan.textContent = job.websiteType || 'N/A';
             websiteCell.appendChild(websiteSpan);
-            row.appendChild(websiteCell);
 
             // Job Description
             const descCell = document.createElement('td');
@@ -174,58 +170,45 @@ class JobsTable {
                 descCell.appendChild(document.createElement('br'));
                 descCell.appendChild(expandBtn);
             }
-            row.appendChild(descCell);
 
             // Comments
             const commentsCell = document.createElement('td');
-            const commentsInput = document.createElement('textarea');
-            commentsInput.className = 'comments-input';
-            commentsInput.placeholder = 'Add your comments...';
-            commentsInput.value = job.comments || '';
-            commentsInput.dataset.jobUrl = job.url; // Store URL for identification
+            commentsCell.className = 'comments-cell';
+            commentsCell.innerHTML = `
+                <textarea class="comment-input" placeholder="Add notes..." data-url="${job.url}">${job.comments || ''}</textarea>
+            `;
             
             // Auto-save functionality
             let saveTimeout;
-            commentsInput.addEventListener('input', () => {
+            commentsCell.querySelector('.comment-input').addEventListener('input', () => {
                 clearTimeout(saveTimeout);
                 saveTimeout = setTimeout(() => {
-                    this.saveComment(job.url, commentsInput.value);
+                    this.saveComment(job.url, commentsCell.querySelector('.comment-input').value);
                 }, 1000); // Save after 1 second of inactivity
             });
             
-            commentsCell.appendChild(commentsInput);
-            row.appendChild(commentsCell);
-
-            // AI Summary
-            const aiCell = document.createElement('td');
-            aiCell.className = 'ai-summary';
-            aiCell.textContent = job.aiSummary || 'N/A';
-            row.appendChild(aiCell);
-
             // Recruiter
             const recruiterCell = document.createElement('td');
             recruiterCell.textContent = job.recruiterName || 'N/A';
-            row.appendChild(recruiterCell);
-
+            
             // Days Since Published
-            const freshnessCell = document.createElement('td');
-            freshnessCell.className = 'job-freshness';
-            if (job.jobFreshness !== null && job.jobFreshness !== undefined) {
-                freshnessCell.textContent = `${job.jobFreshness} days`;
-            } else {
-                freshnessCell.textContent = 'N/A';
-            }
-            row.appendChild(freshnessCell);
-
+            const daysCell = document.createElement('td');
+            daysCell.textContent = job.jobFreshness ? `${job.jobFreshness} days` : 'N/A';
+            
             // Extracted Date
-            const dateCell = document.createElement('td');
-            dateCell.className = 'extracted-date';
-            if (job.extractedAt) {
-                dateCell.textContent = new Date(job.extractedAt).toLocaleString();
-            } else {
-                dateCell.textContent = 'N/A';
-            }
-            row.appendChild(dateCell);
+            const savedCell = document.createElement('td');
+            savedCell.className = 'extracted-date';
+            savedCell.textContent = new Date(job.extractedAt).toLocaleDateString();
+            
+            row.appendChild(companyCell);
+            row.appendChild(roleCell);
+            row.appendChild(familyCell);
+            row.appendChild(websiteCell);
+            row.appendChild(descCell);
+            row.appendChild(commentsCell);
+            row.appendChild(recruiterCell);
+            row.appendChild(daysCell);
+            row.appendChild(savedCell);
 
             this.jobsTableBody.appendChild(row);
         });
@@ -260,69 +243,53 @@ class JobsTable {
                 return;
             }
 
-            const fileStorage = new FileStorageService();
-            await fileStorage.loadSettings();
-            
+            // Create CSV headers
+            const headers = [
+                'Company Name',
+                'Job Role', 
+                'Job Family',
+                'Website Type',
+                'Job Description',
+                'Comments',
+                'Recruiter Name',
+                'Days Since Published',
+                'Saved At',
+                'URL'
+            ];
+
             // Create CSV content from filtered jobs
-            const csvContent = this.createCSVContent(this.filteredJobs);
+            const csvContent = [
+                headers.join(','),
+                ...this.filteredJobs.map(job => [
+                    this.escapeCSV(job.companyName || ''),
+                    this.escapeCSV(job.jobRole || ''),
+                    this.escapeCSV(job.jobFamily || ''),
+                    this.escapeCSV(job.websiteType || ''),
+                    this.escapeCSV(job.jobDescription || ''),
+                    this.escapeCSV(job.comments || ''),
+                    this.escapeCSV(job.recruiterName || ''),
+                    this.escapeCSV(job.jobFreshness ? `${job.jobFreshness} days` : ''),
+                    this.escapeCSV(job.extractedAt ? new Date(job.extractedAt).toLocaleDateString() : ''),
+                    this.escapeCSV(job.url || '')
+                ].join(','))
+            ].join('\n');
             
             // Trigger download
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `job_search_data_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
             
-            chrome.downloads.download({
-                url: url,
-                filename: `filtered_jobs_${new Date().toISOString().split('T')[0]}.csv`,
-                saveAs: true
-            });
-
+            alert(`Exported ${this.filteredJobs.length} jobs to CSV successfully!`);
         } catch (error) {
-            console.error('Error exporting CSV:', error);
+            console.error('Error exporting to CSV:', error);
             alert('Failed to export CSV: ' + error.message);
         }
-    }
-
-    createCSVContent(jobs) {
-        const headers = [
-            'Company Name',
-            'Job Role',
-            'Job Family',
-            'Website Type',
-            'Full Website',
-            'Job Description',
-            'Comments',
-            'AI Summary',
-            'Recruiter Name',
-            'Days Since Published',
-            'Company Section',
-            'Position Summary',
-            'Saved At',
-            'URL'
-        ];
-
-        const csvRows = [headers.join(',')];
-
-        jobs.forEach(job => {
-            const row = [
-                this.escapeCSV(job.companyName || ''),
-                this.escapeCSV(job.jobRole || ''),
-                this.escapeCSV(job.jobFamily || ''),
-                this.escapeCSV(job.websiteType || ''),
-                this.escapeCSV(job.fullWebsite || ''),
-                this.escapeCSV(job.jobDescription || ''),
-                this.escapeCSV(job.comments || ''), // Added Comments field
-                this.escapeCSV(job.aiSummary || ''),
-                this.escapeCSV(job.recruiterName || ''),
-                this.escapeCSV(job.jobFreshness || ''),
-                this.escapeCSV(job.companySection || ''),
-                this.escapeCSV(job.positionSummary || ''),
-                this.escapeCSV(job.extractedAt || ''),
-                this.escapeCSV(job.url || '')
-            ];
-            csvRows.push(row.join(','));
-        });
-
-        return csvRows.join('\n');
     }
 
     escapeCSV(text) {

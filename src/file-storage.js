@@ -461,22 +461,23 @@ class FileStorageService {
             `Skills: ${jobData.aiSummary.keySkills?.join(', ') || 'N/A'}` : 
             'N/A';
 
-        return {
-            companyname: jobData.companyName || 'N/A',
-            jobrole: jobData.jobRole || 'N/A',
-            jobfamily: jobData.jobFamily || 'N/A',
-            jobdescription: jobData.jobDescription || 'N/A',
+        const formatted = {
+            companyname: jobData.companyName || '',
+            jobrole: jobData.jobRole || '',
+            jobfamily: jobData.jobFamily || '',
+            websitetype: jobData.websiteType || '',
+            fullwebsite: jobData.fullWebsite || '',
+            jobdescription: jobData.jobDescription || '',
             comments: jobData.comments || '',
-            recruitername: jobData.recruiterName || 'N/A',
-            companysection: jobData.companySection || 'N/A',
-            positionsummary: jobData.positionSummary || 'N/A',
-            websitetype: jobData.websiteType || 'N/A',
-            fullwebsite: jobData.fullWebsite || 'N/A',
-            aisummary: aiSummary,
-            extractedat: jobData.extractedAt || new Date().toISOString(),
-            jobfreshness: jobData.jobFreshness ? `${jobData.jobFreshness} days` : 'N/A',
-            url: jobData.url || 'N/A'
+            recruitername: jobData.recruiterName || '',
+            dayssincepublished: jobData.jobFreshness || '',
+            companysection: jobData.companySection || '',
+            positionsummary: jobData.positionSummary || '',
+            savedat: jobData.extractedAt || '',
+            url: jobData.url || ''
         };
+
+        return formatted;
     }
 
     // Method to get all stored job data
